@@ -3,7 +3,6 @@ For at hente repoet skal du bruge
 
 ```
 git clone --recursive git@github.com:norskovsen/Dispositioner.git
-
 ```
 
 Dette repo indeholder dispositioner til mundtlige eksamener i kurser på Datalogi fra Aarhus Universitet. De er på dansk eller engelsk afhængigt af sproget snakket til eksamen. 
