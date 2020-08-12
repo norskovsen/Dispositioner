@@ -42,7 +42,7 @@ Der er dispositioner for følgende kurser taget på Aarhus Universitet i det på
 - Bachelorkurser
 
   - Programmering 2 (2016) *svarende til det nuværende Introduktion til Programmering*
-  - Regularitet og Automater (2017) *svarende til Beregnlighed og Logik*
+  - Regularitet og Automater (2017) *svarende til den nuværende Beregnlighed og Logik*
   - Softwarekonstruktion og -arkitektur (2017)
   - Distribuerede System og Sikkerhed (2018)
   - Machine Learning (2018)
