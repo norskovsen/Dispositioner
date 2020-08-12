@@ -6,17 +6,17 @@ git clone --recursive git@github.com:norskovsen/Dispositioner.git
 
 ```
 
-Dette repo indholder dispositioner til mundtlige eksamener i kurser på Datalogi fra Aarhus Universitet. De er på dansk eller engelsk afhængigt af sproget snakket til eksamen. 
+Dette repo indeholder dispositioner til mundtlige eksamener i kurser på Datalogi fra Aarhus Universitet. De er på dansk eller engelsk afhængigt af sproget snakket til eksamen. 
 
 
 
-*Der tages forbehold for stavefejl og gennerelle fejl, folk er velkomne til at komme med rettelser*
+*Der tages forbehold for stavefejl og generelle fejl*
 
 
 
 ## Compile
 
-For at compile en disposition kan følgend kommando bruges i terminal i den pågældende mappe
+For at compile en disposition kan følgende kommando bruges i terminal i den pågældende mappe
 
 ```
 make all
