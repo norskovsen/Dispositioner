@@ -1,0 +1,196 @@
+\section{$\Sigma$ Protocols}
+\begin{itemize}
+  \item Let $R$ be a binary relation i.e $R \subseteq \{0,1\}^* \times \{0,1\}^*$
+  \begin{itemize}
+  	\item The only restriction is that if $(x,w) \in R$ then the length of $w$ is at most $p(|x|)$ for some polynomial $p()$
+  	\item $w$ is called a \textbf{witness} for $x$
+  \end{itemize}
+  \item \textbf{$\Sigma$ protocols} are in the following 3 move form where $x$ is a common input to $P,V$ and a $w$ such that $(x,w) \in R$ is a private input to $P$:
+  \begin{enumerate}
+  	\item $P$ sends a message $a$
+  	\item $V$ sends a random $t$ bit string $e$
+  	\item $P$ sends a reply $z$, and $V$ decides to accept of reject based on the data he has seen i.e. $x,a,e,z$
+  \end{enumerate}
+  \item $P$ and $V$ are assumed to be probabilistic polynomial time machines and $P$'s only advantage over $V$ is that he knows $w$ 
+
+  \item \textbf{Definition 1.} A protocol $\mathcal P$ is said to be a $\Sigma$ protocol for a relation $R$ if:
+  \begin{itemize}
+    \item $P$ is on the 3 move form
+    \item \textbf{Completeness:} If $P,V$ follow the protocol on input $x$ and private input $w$ to $P$ where $(x,w) \in R$, the verifier always accepts
+  	\item \textbf{The Special Soundness Property:} From any $x$ and any pair of accepting conversations on input $x$, $(a,e,z),(a,e',z')$ where $e \neq e'$, one can efficiently compute $w$ such that $(x,w)$ in $R$
+  	\item \textbf{Special Honest-Verifier Zero-Knowledge:} There exists a polynomial-time simulator $M$, which on input $x$ and a random $e$ outputs an accepting conversation of the form $(a,e,z)$ with the same probability distribution as conversations between the honest $P,V$ on input $x$
+  \end{itemize}
+  \item Define $L_R$ to be the set of $x$'s for which there exists $w$ such that $(x,w) \in L$
+  \begin{itemize}
+  	\item The special soundness property implies that a $\Sigma$ protocol for $R$ is always an interactive proof system of $L_R$ with error probability $2^{-t}$
+  \end{itemize}
+  \item \textbf{Lemma 1.} The properties of $\Sigma$ protocols are invariant under parallel composition i.e. repeating a $\Sigma$ protocol for $R$ twice in parallel produces a new $\Sigma$ protocol for $R$ with challenge length $2t$
+
+  \item \textbf{Lemma 2.} If a $\Sigma$ protocol for $R$ exists, then for any $t$, there exists a $\Sigma$ protocol for $R$ with challenge length $t$ 
+
+\end{itemize}
+
+\subsection{Proof of Knowledge}
+\begin{itemize}
+  \item \textbf{Definition 2.} Let $\kappa()$ be a function from bit strings to the interval $[0..1]$. The protocol $(P,V)$ is said to be a proof of knowledge for the relation $R$ with knowledge error $\kappa$ if the following are satisfied
+  \begin{itemize}
+  	\item \textbf{Completeness} On common input $x$, if the honest prover $P$ get a private input $w$ such that $(x,w) \in R$ then the verifier always accepts
+  	\item \textbf{Knowledge soundness} There exists a probabilistic algorithm $M$ called the knowledge extractor
+    \begin{itemize}
+  		\item It gets input $x$ and rewindable black-box access to the prover
+  		\item It attempts to compute $w$ such that $(x,w) \in R$
+  		\item It is required that the following holds:
+    \end{itemize}
+    \[
+      \frac{|x|^c}{\epsilon(x)-\kappa(x)} 
+    \]
+    where access to $P^*$ counts as one step only and the error $\kappa()$ is the probability that one can convince the verifier without knowing a correct $w$ 
+  \end{itemize}
+
+  \item \textbf{Theorem 1.} Let $\mathcal P$ be a $\Sigma$ protocol for relation $R$ with challenge length $t$.
+  \begin{itemize}
+  	\item $\mathcal P$ is a proof of knowledge with knowledge error $2^{-t}$ 
+  \end{itemize}
+\end{itemize}
+
+\subsection{OR-Protocols}
+\begin{protocol}{$\mathcal P_{OR}$ for a $\Sigma$ protocol $\mathcal P$}{sigma-or}
+  \begin{enumerate}
+   	\item $P$ computes the first message $a_b$ in $\mathcal P$, using $x_b,w$ as input. \\
+  		    P chooses $e_{1-b}$ at random and runs the simulator $M$ on input $x,e_{1-b}$ \\
+  		    Let $(a_{1-b},e_{1-b},z_{1-b})$ be the output \\
+  		    $P$ sends $a_0, a_1$ to $V$
+  	\item $V$ chooses a random $t$ bit string $s$ sends it to $P$
+  	\item $P$ sets $e_b = s \oplus e_{1-b}$ and computes the answer $z_b \in \mathcal P$ to challenge $e_b$ using $x_b,a_b,e_b,w$ as input. He sends $e_b, z_0,e_1,z_1$ to $V$
+  	\item $V$ checks that $s=e_0 \oplus e_1$ and that conversations $(a_0, e_0, z_0)$, $(a_1, e_1, z_1)$ are accepting conversations in $\mathcal P$, on inputs $x_0$ resp. $x_1$
+  \end{enumerate}
+\end{protocol}
+
+\begin{itemize}
+  \item A basic construction with $\Sigma$ protocols allows a prover to show that given two inputs $x_0$ and $x_1$, he knows $w$ such that either $(x_0,w) \in R$ or $(x_1,w) \in R$, but without revealing which case
+  \begin{itemize}
+  	\item It is assumed that we are given a $\Sigma$ protocol $\mathcal P$ for $R$
+    \begin{itemize}
+      \item $x_0$, $x_1$ are assumed to be common input to $P$, $V$ and $w$ is private input to $P$ where $(x_b,w) \in R$ for $b=0$ or $1$
+    \end{itemize}
+  	\item The idea is to ask the prover to complete two instances of $\mathcal P$ where:
+    \begin{itemize}
+  		\item For $x_b$ it is done for real
+  		\item For $x_{1-b}$ it can be faked using the simulator $M$
+  		\item A little freedom is given in choosing the challenges to answers, such that he is able to complete both instances
+    \end{itemize}
+  \end{itemize}
+
+  \item Let $R_{OR} = \{((x_0,x_1),w) \mid (x_0,w) \in R \text{ or } (x_1,w) \in R\}$. Then we have:
+  \begin{itemize}
+  	\item \textbf{Theorem 2.} The protocol $\mathcal P_{OR}$ (\autoref{prot:sigma-or}) is a $\Sigma$ protocol for $R_{OR}$. Moreover for any verifier $V^*$, the probability distribution of conversations between $P$ and $V^*$, where $w$ is such that $(x_b, w) \in R$, is independent of $b$
+    \begin{proof} 
+      It is clear that the protocol has the right 3-move form. \\
+      To verify special soundness, let two accepting conversations
+      \[
+        (a_0,a_1,s,e_0,e_1,z_0,z_1),(a_0,a_1,s',e_0',e_1',z_0',z_1') \text{ with } s \neq s'
+      \]
+      be given. Then clearly it must be the case that for some $c=0$ or $1$, $e_c \neq e_c'$ and then from $(a_c,e_c,z_c), (a_c,e_c',z_c')$ we can compute $w$ such that $(x_c,w) \in R$, by special soundness of $\mathcal P$. \\
+      Honest verifier zero-knowledge is clear given $s$, choose $e_0$, $e_1$ at random subject to $s=e_0  \oplus e_1$ and run $M$ twice, on inputs $(x_0, e_0)$, resp. $(x_1, e_1)$. \\
+      Assume the we are given an arbitrary verifier $V^*$. Observer that the distribution of conversations between $P$ and $V^*$ can be specified as follows:
+      \begin{itemize}
+      	\item They have the form $a_0, a_1, s, e_0, e_1, z_0, z_1$
+        \item $a_0$ and $a_1$ are distributed as an honest prover in $\mathcal P$ would choose them because of the honest verifier zero-knowledge of $\mathcal P$
+        \item $s$ has whatever distribution $V^*$ outputs, given $x_0,x_1,a_0,a_1$ and $e_0,e_1$ are random subject to $s=e_0 \oplus e_1$
+        \item $z_0$ has whatever distribution the honest prover in $\mathcal P$ outputs, given that the input was $x_0$ and the first part of the conversation was $a_0,e_0$ similarly for $z_1$
+        \item It is trivial for $z_b$ and it follows from perfect honest verifier zero-knowledge for $z_{1-b}$
+        \item Thus from this specification that the distribution does not depend on $b$
+      \end{itemize}
+
+    \end{proof}
+  \end{itemize}
+  \item \autoref{prot:sigma-or} ($\mathcal P_{OR}$) is what is known as \textit{witness indistinguishable} (WI): there are several different values of $w$ that a prover may know that would enable him to complete the protocol successfully. But there is no way one can tell from the conversations which of the possible values he knows.
+\end{itemize}
+
+\subsection{Hard Relations}
+\begin{itemize}
+  \item \textbf{Definition 3.} A relation $R$ is said to be hard if
+  \begin{itemize}
+  	\item There exists a probabilistic polynomial time algorithm $G$, called the generator, which on input $1^k$ outputs a pair $(x,w) \in R$ where $|x| = k$
+  	\item The following holds for all probabilistic polynomial time algorithms:
+    \begin{itemize}
+  		\item Consider the experiment where we run $G$ on input $1^k$
+  		\item Give the $x$ produced to $A$, and let $w_A$ be the output $A$ produces
+  		\item Let $p_A(k)$ be the probability that $(x,w_A) \in R$, then $p_{A}(k)$ is negligible in $k$
+    \end{itemize}
+  \end{itemize}
+
+  \item Let a relation $R$ with generator $G$ be given and assume $R$ has $\Sigma$ protocol $\mathcal P$, then consider the following game played by an arbitrary poly-time verifier $V^*$:
+  \begin{enumerate}
+  	\item Run $G$ on input $1^k$ to get pairs $(x,w) \in R$. Give $w$ as private input to the prover $P$ in $\mathcal P$
+  	\item Let $V^*$ execute $\mathcal P$ with $P$ an arbitrary (polynomial) number of times on common input $x$
+  	\item $V^*$ outputs a string $w^*$
+  	\item If $(x,w^*) \in R$ we say that $V^*$ wins the game
+  \end{enumerate}
+  \item \textbf{Definition 4.} $\mathcal P$ is \textbf{witness hiding} if any poly-time $V^*$ wins the above game with only negligible probability
+
+  \item \textbf{Theorem 3.} If $R$ is a hard relation, then the protocol $\mathcal P_{OR}$ for $R_{OR}$ is witness hiding
+\end{itemize}
+
+\subsection{Schnorr's protocol}
+\begin{protocol}{Schnorr's Protocol}{schnorr-protocol}
+  \begin{enumerate}
+  	\item $P$ chooses $r$ at random in $Z_q$ and sends $a=g^r \mod p$ to $V$
+    \item $V$ chooses a challenge $e$ at random in $Z_{2t}$ and sends it to $P$. Here, $t$ is fixed such that $2^t < q$ 
+    \item $P$ sends $z=r+ew \mod q$ to $V$, who checks that $g^z = ah^e \mod p$, that $p,q$ are prime and that $g,h$ have order $q$, and accepts iff this is the case
+  \end{enumerate}
+\end{protocol}
+
+\begin{protocol}{$\Sigma$ protocol example}{sigma-example}
+  Let $p,q$ be chosen as in Schnorr's protocol and let $g_1, g_2, h \in Z^*_p$ be of order $q$. Assume $P$ gets as input $w_1, w_2$ where $h = g^{w_1}g^{w_2} \mod p$. Consider the following protocol:
+  \begin{enumerate}
+    \item $P$ chooses $r_1,r_2$ at random in $Z_q$ and sends $a = g_1^{r_1} g_2^{r_2} \mod p$ to $V$
+    \item $V$ chooses a challenge $e$ at random in $Z_{2^t}$ and sends it to $P$. Where $t$ is fixed such that $2^t < q$ 
+    \item $P$ sends $z_1 = r_1 + ew_1 \mod q$, $z_2 = r_2 + ew_2 \mod q$ to $V$, who checks that $g_1^{z_1}g_2^{z_2} = ah^e \mod p$, that $p,q$ are prime and that $g_1,g_2, h$ have order $q$ and accepts iff this is the case
+  \end{enumerate}
+\end{protocol}
+
+\begin{itemize}
+	\item \nameref{prot:schnorr-protocol} (\autoref{prot:schnorr-protocol}) is a $\Sigma$ protocol for the relation $DL$ defined by
+  \[
+    DL = \{(x,w) \mid x = (p,q,g,h), ord(g) = ord(g) = q, h=g^w\}
+  \]
+  where $p$ are prime and $q$ are a prime divisor in $p-1$, $g,h \in Z_p^*$ and $w \in Z^q$
+  \item \textbf{Lemma.} \autoref{prot:sigma-example} is a $\Sigma$-protocol for the relation
+  \[
+    \{(x,(w_1,w_2)) \mid x = (p,q,g_1,g_2,h) \text{ and } h = g_1^{w_1} g_2^ {w_2}\}
+  \]  
+  where is should also be satisfied that $p,q$ are prime, $w_1, w_2 \in Z_q$ and that $g_1, g_2, h \in Z_p^*$ have order $q$ 
+  \begin{proof} 
+  The protocol is indeed on the 3-move form \\
+  Completeness is shown as follows: \\
+  Since both $P$ and $V$ follows the protocol it must be the case that $h = g_1^{w_1} g_2^{w_2} \mod p$, that $z_1 =r_1 + ew_1 \mod q$ and $z_2 = r_2 + ew_2 \mod q$ where $r_1,r_2$ are the randomly chosen elements from step 1 and the random challenge $e$ from step 2 and therefore
+  \[
+    g_1^{z_1}g_2^{z_2} \equiv g_1^{r_1 + ew_1}g_2^{r_2 + ew_2} \equiv g_1^{r_1 + r_2} g^{e(w_1 + w_2)} \equiv a (g^{w_1}g^{w_2})^e \equiv ah^e \cg p
+  \]
+  This implies completeness since $g_1^{z_1}g_2^{z_2} = ah^e \mod p$ \smallskip \\
+  The special soundness property is shown as follows:
+  \begin{align*}  
+    g_1^{z_1}g_2^{z_2} = ah^e \mod p \land g_1^{z_1'}g_2^{z_2'} = ah^{e'} \mod p &\iff
+    g_1^{z_1}g_2^{z_2}h^{-e} = g_1^{z_1'}g_2^{z_2'}h^{-e'} \mod p \\
+    &\iff g_1^{z_1-z_1'}g_2^{z_2-z_2'} = h^{e-e'} \mod p \\
+    &\iff g_1^{z_1-z_1'}g_2^{z_2-z_2'} = (g_1^{w_1}g_2^{w_2})^{e-e'} \mod p \\
+    &\iff (g_1^{z_1-z_1'}g_2^{z_2-z_2'})^{e'-e} = g_1^{w_1}g_2^{w_2} \mod p \\
+    &\iff g_1^{(e'-e)(z_1-z_1')}g_2^{(e'-e)(z_2-z_2')} = g_1^{w_1}g_2^{w_2} \mod p \\
+  \end{align*}
+  This implies the special property since $w_1 = (e'-e)(z_1 - z_1') \mod q$ and $w_2 = (e'-e)(z_1 - z_1') \mod q$ \smallskip \\
+  The protocol is shown to be honest verifier zero-knowledge as follows: \\
+  To simulate a conversation simply choose $e \in_R 2^{t}$, $z_1 \in_R Z_q$ and $z_2 \in_R Z_q$ and compute $a = g_1^{z_1}g_2^{z_2}h^{-e}$. The conversation $(a, e, (z_1,z_2))$ has the same distribution as a conversation between an honest prover and a honest verifier. This follows from it being an accepting conversation since
+  \[
+    ah^e = g_1^{z_1}g_2^{z_2}h^{-e}h^e = g_1^{z_1} g_2^{z_2}
+  \]
+  $z_1$ and $z_2$ clearly has the same distribution since they are just randomly chosen elements and since $a$ is based on randomly chosen elements as in the real case. It must be the case that $a$s distribution is the same as in the real case. \smallskip \\
+  \end{proof}
+\end{itemize}
+
+\newpage
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "cpt-noter"
+%%% End:

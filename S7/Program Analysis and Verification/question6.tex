@@ -1,0 +1,144 @@
+\section{Basic Separation Logic: Specs and Proof for Functions on Linked Lists}
+\input{basic-seperation-logic}
+\subsection{isList predicate}
+\begin{itemize}
+  \item $[]$ is used to denote the empty sequence
+  \item $x :: xs$ is used for the sequence consisting of an element $x$ and a sequence $xs$ 
+  \item The isList predicate tie concrete program values to logical sequences
+	\item The isList $l \; xs$ predicate relates values $l$ to sequences $xs$ and is defined as follows by induction on $xs$
+  \begin{align*}
+    & \text{isList} \; l [] \equiv l = \text{inj}_1() \\
+    & \text{isList} \; l(x :: xs) \equiv \exists hd, l'.l = \text{inj}_2(hd) * hd \hookrightarrow (x, l') * \text{isList} \; l' xs
+  \end{align*}
+  The isList $l \; xs$ predicate ensures that the list $l$ is acyclic because of separation of the hd pointer and the inductive occurence of the predicate 
+\end{itemize}
+
+\subsection{inc function}
+\subsubsection{Spec}
+\begin{itemize}
+  \item To specify the inc function the following map functions are specified on sequences in the logic. It is a logical function from sequences to sequences that applies $f$ at every index of the sequence
+  \begin{align*}
+    &\text{map} \; f[] \equiv [] \\
+    &\text{map} \; f(x :: xs) \equiv f x :: \text{map} \; f \; xs
+  \end{align*}
+	\item Let inc be the following program that increments all the values in a linked list of integers 
+  \begin{align*}
+    \text{rec} \; \text{inc}(l) = \; &\text{match} \; l \; \text{with} \\
+                                     & \hspace{4px} \text{inj}_1 \; x_1 \Rightarrow () \\
+                                     &| \hspace{2px}  \text{inj}_2 \; x_2 \Rightarrow \text{let} \; h= \pi_1 \; !x_2 \; \text{in} \\
+                                     & \hspace{48px} \text{let} \; t = \pi_2 \; !x_2 \; \text{in} \\
+                                     & \hspace{48px} x_2 \leftarrow (h+1, t); \\
+                                     & \hspace{48px} \text{inc} \; t \\
+                                     & \text{end}
+  \end{align*}
+  \item The inc program should have the following specification 
+  \begin{equation*}
+    \forall xs. \forall x. \{\text{isList} \; l \; xs \} \text{inc} \; l \{v.v = () \land \text{isList} \; l \; (\text{map}(1+) \; xs)\}
+  \end{equation*}
+\end{itemize}
+
+\subsubsection{Proof}
+\begin{equation*}
+  \forall xs. \forall x. \{\text{isList} \; l \; xs \} \text{inc} \; l \{v.v = () \land \text{isList} \; l \; (\text{map}(1+) \; xs)\}
+\end{equation*}
+\begin{itemize}
+	\item The \texttt{HT-REC} rule is first used to get the following assumption
+  \begin{equation*}
+    \forall xs. \forall x. \{\text{isList} \; l \; xs \} \text{f} \; l \{v.v = () \land \text{isList} \; l \; (\text{map}(1+) \; xs)\}
+  \end{equation*}
+  which means we are left with proving 
+  \begin{equation*}
+    \forall xs. \forall x. \{\text{isList} \; l \; xs \} \text{match} \; l \; \text{with} \; ... \{v.v = () \land \text{isList} \; l \; (\text{map}(1+) \; xs)\}
+  \end{equation*}
+  where in the body inc has been replaced with the function $f$ which triple is assumed for
+  \item Then two cases are considered, by using the fact that the sequence xs is either empty $[]$ or has a head $x$ followed by another sequence $xs'$. In the first case we need to show
+  \begin{equation*}
+    \forall xs. \forall x. \{\text{isList} \; l \; [] \} \text{match} \; l \; \text{with} \; ... \{v.v = () \land \text{isList} \; l \; (\text{map}(1+) \; [])\}
+  \end{equation*}
+  and in the second case
+  \begin{equation*}
+    \forall xs. \forall x. \{\text{isList} \; l \; (x :: xs') \} \text{match} \; l \; \text{with} \; ... \{v.v = () \land \text{isList} \; l \; (\text{map}(1+) \; (x :: xs'))\}
+  \end{equation*}
+  \item In the first case the derived match rule from Exercise 4.10 and therefore the following should be proven to show that the first case is taken
+  \begin{equation*}
+    \{\text{isList} \; l \; []\} l \{v.v = \text{inj}_1() * \text{isList} \; l \; []\}
+  \end{equation*}
+  this is done by first using the definition of isList
+  \begin{equation*}
+    \{l = \text{inj}_1()\} l \{v.v = \text{inj}_1() * l = \text{inj}_1()\}
+  \end{equation*}
+  then the derived rule \texttt{HT-PRE-EQ}
+  \begin{equation*}
+    \{\text{True}\} \text{inj}_1() \{v.v = \text{inj}_1() * \text{inj}_1() = \text{inj}_1()\}
+  \end{equation*}
+  then the fact that $a = a \equiv \text{True}$
+  \begin{equation*}
+    \{\text{True}\} \text{inj}_1() \{v.v = \text{inj}_1()\}
+  \end{equation*}
+  which can be proven using the \texttt{HT-RET} rule.
+  \item Thereby the first branch is taken and thus by the derived match rule the following triple need to be shown
+  \begin{equation*}
+    \{\text{isList}\; l \; []\} () \{v.v = () * \text{isList} \; l \; (\text{map} \; (+1) \; [])\}
+  \end{equation*}
+  this is done by first using the definition of isList and map
+  \begin{equation*}
+    \{l = \text{inj}_1()\} () \{v.v = () * l = \text{inj}_1()\}
+  \end{equation*}
+  then the rule \texttt{HT-FRAME} is used
+  \begin{equation*}
+    \{\text{True}\} () \{v.v = ()\}
+  \end{equation*}
+  which can be proven using the \texttt{HT-RET} rule
+  \item In the second case where the sequence is not empty it should be proven that 
+  \begin{equation*}
+    \{\text{isList} \; l \; (x : xs)\} l \{v.v = \text{inj}_1() * \text{isList} \; l \; (x: xs)\}
+  \end{equation*}
+  this is done by first using the definition of isList on a nonempty sequence and the rule \texttt{HT-EXISTS}
+  \begin{align*}
+    \{&l = \text{inj}_2 \; hd * hd \hookrightarrow (x, l') * \text{isList} \; l' \; xs' \} \\
+        &l \\
+    \{&r.r = \text{inj}_2 \; hd * l = \text{inj}_2 \; hd * hd \hookrightarrow (x, l') * \text{isList} \; l' \; xs' \} 
+  \end{align*}
+  then the rule \texttt{HT-FRAME} is used 
+  \begin{align*}
+    \{&l = \text{inj}_2 \; hd \} \\
+        &l \\
+    \{&r.r = \text{inj}_2 \; hd * l = \text{inj}_2 \; hd \}
+  \end{align*}
+  then the \texttt{HT-PRE-EQ} rule is used and we get
+  \begin{align*}
+    \{&\text{True}\} \\
+        &\text{inj}_2 \; hd \\
+    \{&r.r = \text{inj}_2 \; hd \} 
+  \end{align*}
+  which can be proven using the \texttt{HT-RET} rule.
+  \item Thereby the match takes the second branch and thus the body of the second branch is considered. Using the rules \texttt{HT-LET-DET}, \texttt{HT-BIN} and \texttt{HT-PROJ} repeatedly one can prove
+  \begin{align*}
+    \{&l = \text{inj}_2 \; hd * hd \hookrightarrow (x, l') * \text{isList} \; l' \; xs' \} \\
+      &\text{let} \; h= \pi_1 \; !x_2 \; \text{in} \\
+      &\text{let} \; t = \pi_2 \; !x_2 \; \text{in} \\
+      &x_2 \leftarrow (h+1, t); \\
+    \{&l = \text{inj}_2 \; hd * hd \hookrightarrow (x + 1, l') * \text{isList} \; l' \; xs' * t = l' * h = x\} 
+  \end{align*} 
+  together with the rules \texttt{HT-FRAME} and \texttt{HT-STORE}
+  \item Using the rule \texttt{HT-SEQ} we are left with proving
+  \begin{align*}
+    \{&l = \text{inj}_2 \; hd * hd \hookrightarrow (x + 1, l') * \text{isList} \; l' \; xs' * t = l' * h = x\} \\
+      & f \; t \\
+    \{&r.r = () * \text{isList} \; l (\text{map}(+1)(x::xs'))\}
+  \end{align*}
+  using the rule \texttt{HT-CSQ} on the precondition we get
+  \begin{align*}
+    \{&l = \text{inj}_2 \; hd * hd \hookrightarrow (x + 1, l') * \text{isList} \; t' \; xs' \} \\
+      & f \; t \\
+    \{&r.r = () * \text{isList} \; l (\text{map}(+1)(x::xs'))\}
+  \end{align*}
+  which follows from the induction hypothesis and the definition of the isList predicate
+\end{itemize}
+
+\newpage
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "pav-noter"
+%%% End:

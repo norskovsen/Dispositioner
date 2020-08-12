@@ -1,0 +1,237 @@
+\section{Passivly secure MPC}
+\begin{itemize}
+  \item In the \textit{Multiparty Computation Problem} we want to have a protocol between $n$ players that is correct and private i.e. it computes the correct result and no extra information besides this is leaked
+  \item \textbf{Semihonest} or \textbf{passive security} is when all the players learn nothing more than their own inputs and the outputs they were supposed to receive even if their computing power is unbounded if all the players follow the protocol
+  \item It is assumed that each pair of players can communicate through a perfectly secure channel
+\end{itemize}
+
+\subsection{Secret Sharing}
+\subsubsection{Shamir's Secret Sharing}
+\begin{itemize}
+  \item It is based on polynomials over a finite field $\mathbb F$
+  \item The only restriction on $\mathbb F$ is that $|\mathbb F| > n$
+  \begin{itemize}
+    \item It is assumed for correctness and simplicity that $\mathbb F = \mathbb Z_p$ for some prime $p>n$
+  \end{itemize}
+  \item A value $s \in \mathbb F$ is \textbf{shared} by
+  \begin{itemize}
+    \item Choosing a random polynomial $f_s(X) \in \mathbb F[X]$ of degree at most $t$ such that $f_s(0) = s$
+    \item Sending privately to player $P_j$ the share $s_j = f_s(j)$
+  \end{itemize}
+  \item Any set of $t$ or fewer shares contains no information on $s$ and can easily be reconstructed from any $t+1$ or more shares
+  \begin{itemize}
+  	\item Both of these facts can be proven using \textit{Lagrange Interpolation}
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Lagrange Interpolation}
+\begin{itemize}
+  \item If $h(X)$ is a polynomial over $\F$ of degree at most $l$, and if $C$ is a subset of $\F$ with $|C| = l+1$ then
+  \[
+    h(X) = \sum_{i \in C} h(i) \delta_i(X)
+  \]
+  where $\delta_i(X)$ is the degree $l$ polynomial such that for all $i,j \in C$, $\delta_i(j) = 0$ if $i \neq j$ and $\delta_i(j) = 1$ if $i=j$
+  \[
+    \delta_i(X) = \prod_{j \in C, j \neq i} \frac{X-j}{i-j}
+  \]	
+	
+  \item A consequence of Lagrange interpolation is that there exist easily computable values $\mathbf r = (r_1, \dots, r_n)$ such that 
+  \[
+    h(0) = \sum_{i=1}^n r_i h(i)
+  \]
+  for all polynomials $h(X)$ of degree at most $n-1$ i.e. $r_i = \delta_i(0)$
+  \begin{itemize}
+  	\item $\mathbf r = (r_1, \dots, r_n)$ is called the \textbf{recombination vector} 
+  	\item The same recombination vector $\bf r$ works for all $h(X)$ since $\delta_i(X)$ does not depend on $h(X)$
+  \end{itemize}
+  \item Another consequence is that for all secrets $s \in \mathbb F$ and all $C \subset \mathbb F$ with $|C| = t$ and $0 \notin C$, if one sample a uniformly random $f$ of degree $\leq t$ and with $f(0) = s$, then the distribution of the $t$ shares 
+  \[
+    (f(i))_{i \in C}
+  \]
+  is the uniform distribution on $\mathbb F^t$	
+\end{itemize}
+
+\subsection{A Passively Secure Protocol}
+\begin{itemize}
+	\item The protocol studied can securely evaluate a function with inputs and outputs in a finite field $\mathbb F$
+  \begin{itemize}
+  	\item It is constructed for the case where each party has exactly one input and one output from $\mathbb F$ i.e. $f: \mathbb F^n \to \mathbb F^n$, $(x_1, \dots, x_n) \to (y_1, \dots, y_n)$
+  	\item It is assumed that the mapping is described using an arithmetic circuit
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Arithmetic circuits}
+\begin{itemize}
+  \item An \textbf{arithmetic circuit} is an acyclic directed graph where each node is called a \textbf{gate} and the edges are called \textbf{wires}
+  \begin{itemize}
+    \item $n$ input gates
+    \begin{itemize}
+      \item No incoming wires and any number of outcoming wires
+      \item Labeled by $i$ for a player $P_i$
+      \item Player $P_i$ supplies that secret input value $x_i$ which it copied onto all outgoing wires
+    \end{itemize}
+    \item Internal addition and multiplication gates
+    \begin{itemize}
+      \item Two incoming wires and any number of outcoming wires
+      \item Add or multiply their two inputs onto the outgoing wires
+    \end{itemize}
+    \item Multiply-by-constant gates
+    \begin{itemize}
+      \item One input wire and any number of output wires
+      \item Labeled by a constant $\alpha \in \mathbb F$ and does multiplication by $\alpha$
+    \end{itemize}
+    \item $n$ output gates
+    \begin{itemize}
+      \item Labeled by $i$ for a player $P_i$
+      \item Assigned to the input wire of this gate is eventually $y_i$
+    \end{itemize}
+  	\item Evaluating a circuit can be done as follows
+  	\item The order in which one visit the gates in this procedure is called the \textbf{computational ordering}
+  	\item This can be used to simulate a boolean circuit with and negation and therefore be used to compute any function
+    \begin{itemize}
+  		\item It can be simulated by operations in $\mathbb F$
+  		\item Boolean values \texttt{true} or \texttt{false} can be encoded as 1 resp. 0
+  		\item The negation of bit $b$ is $1-b$
+  		\item The and of bits $b$ and $b'$ is $b \cdot b'$
+    \end{itemize}
+  \end{itemize}
+   
+  \item It is assumed that a circuit that is to computed securely contains a multiplication gate immediately before each output gate and this only has one output wire
+  \begin{itemize}
+  	\item If the circuit does not satisfy the condition for output $y_j$ one can introduce an extra input $x_j'$ from $P_j$ and then change to a new circuit that multiplies $y_j$ by $x_j'$ just before the output gate
+  	\item It makes the circuit at most a constant factor larger
+  	\item By choosing $x_j' = 1$, $P_j$ will still learn the same value
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Protocol}
+\begin{itemize}
+  \item The protocol given assume secure channels between all parties
+  \item It is assumed that some subset $C$ of size at most $t$ together after the protocol and learn as much information as the can from the data they have seen
+  \begin{itemize}
+  	\item The players in $C$ are \textbf{corrupt}
+  	\item The players not in $C$ are \textbf{honest}
+  \end{itemize}
+  \item \textbf{Definition 3.1} Define $[a;f]_t$, where $a \in \mathbb F$ and $f$ is a polynomial over $f$ with $f(0) = a$ and degree at most $t$:
+  \[
+    [a;f]_t = (f(1), \dots, f(n))
+  \]
+  i.e. the set of shares in secret $a$ computed using polynomial $f$
+  \begin{itemize}
+  	\item Sometimes written as $[a;f]$ or just $[a]$
+  	\item It describes an object i.e. shares $(f(1), \dots, f(n))$ and a statement $f(0) = a$
+  	\item The notation $[a;f]_t$ describes the same object, $(f(1), \dots, f(n))$ but also states that $\deg(f) \leq t$
+  \end{itemize}
+  \item Using the standard notation for entrywise addition, multiplication by a scalar and the Schur product, we have for $\alpha \in \mathbb F$
+  \begin{align*}
+    [a;f] + [b;g] &= (f(1) + g(1), \dots, f(n) + g(n)) \\
+    \alpha[a;f] &= (\alpha f(1), \dots, \alpha,f(n)) \\
+    [a;f] * [b;g] &= (f(1)g(1), \dots, f(n)g(n))
+  \end{align*}	
+  \item \textbf{Lemma 3.2} The following holds for any $a,b,\alpha \in \mathbb F$ and any polynomials $f,g$ over $\mathbb F$ of degree at most $t$ with $f(0) = a$ and $g(0) = b$
+  \begin{align*}
+    [a;f] + [b;g] &= [a+b ; f + g]_t \\
+      \alpha[a;f] &= [\alpha a; \alpha f]_t \\
+    [a;f] * [b;g] &= [ab;fg]_{2t}
+  \end{align*}	
+  \item \textbf{Definition 3.3} A player $P_i$ \textbf{distributes} $[a;f_a]_t$ means the it chooses a random polynomial $f_a(X)$ of degree $\leq t$ with $f_a(0) = a$ and then sends the share $f_a(j)$ to $P_j$ for $j=1,\dots,n$
+  \begin{itemize}
+  	\item Whenever players have obtained shares of a value $a$ based on polynomial $f_a$ then the players \textbf{hold} $[a;f_a]_t$
+  	\item If players hold $[a;f_a]_t, [b;f_b]_t$ then one says that the players compute $[a;f_a]_t + [b;f_b]_t$ to mean that each player $P_i$ computes $f_a(i) + f_b(i)$ and thus players now  $[a+b;f_a + f_b]_t$
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Analysis}
+\begin{protocol}{Protocol CEPS (Circuit Evaluation with Passive Security)}{ceps}
+  The protocol proceeds in three phases: the input-sharing, computation, and output reconstruction phases
+  \begin{itemize}
+  	\item \textbf{Input sharing.} Each player $\P_i$ holding input $x_i \in \F$ distributes $[x_i; f_{x_i}]_t$. Then we go through the circuit one by one. Just after this phase all input gates are considered processed and the \textit{invariant} is maintained.
+  	\item \textbf{Invariant.} Computing the circuit on inputs $x_1, \dots, x_n$ assigns a unique value to every wire. Consider an input or an output wire for any gate, and let $a \in \F$ be the value assigned to this wire. Then, if the gate has been processed, the players hold $[a;f_a]_t$ for a polynomial.
+  \end{itemize}
+  The last two phases of the protocol:
+  \begin{itemize}
+  	\item \textbf{Computation phase.} Repeat the following until all gates have been processed and then go to the next phase. The first gate in a computational order that has not been processed is considered and then the following should be done depending on the type of gate
+    \begin{itemize}
+    	\item \textbf{Addition gate.} The players hold $[a;f_a]_t$, $[b;f_b]_t$, for the two inputs $a,b$ to the gate. The players compute $[a;f_a] + [b;f_b]_t = [a+b;f_a+f_b]_t$
+    	\item \textbf{Multiply-by-constant gate.} The players hold $[a;f_a]_t$ for the inputs $a$ to the gate. The players compute $\alpha[a;f_a]_t = [\alpha a; \alpha f_a]_t$
+    	\item \textbf{Multiplication gate.} The players hold $[a;f_a]_t$, $[b;f_b]$ for the two inputs $a,b$ to the gate
+      \begin{enumerate}
+      	\item The players compute $[a;f_a] * [b;f_b]_t = [ab;f_af_b]_{2t}$
+        \item Define $h \stackrel{\text{def}}{=} f_af_b = ab$ and the parties hold $[ab;h]_{2t}$ \\ 
+        Thus $\P_i$ holds h(i) \\
+        Each $\P_i$ distributes $[h(i);f_i]_t$
+        \item Note that $\text{deg}(h) = 2t \leq n-1$. Let $\mathbf{r}$ be the recombination vector (i.e. $\mathbf{r} = (r_1, \dots, r_n)$ where $h(0) = \sum_{i=1}^n r_ih(i))$ for any polynomial $h$ of degree $\leq n-1$. The players compute
+        \begin{align*}
+          \sum_i r_i[h(i);f_i]_t &= [\sum_i r_ih(i) ; \sum_i r_if_i]_t \\
+                                &= [h(0);\sum_ir_if_i]_t = [ab ; \sum_ir_if_i]_t
+        \end{align*}
+      \end{enumerate}
+    \end{itemize}
+  
+  	\item \textbf{Output reconstruction.} All gates including output gates, have been processed. Do the following for each output gate (label $i$): the players hold $[y;f_y]_t$, where $y$ is the value assigned to the output gate. Each $\P_j$ securely sends $f_j(j)$ to $\P_i$, who uses Lagrange intepolation to compute $y=f_y(0)$ from $f_y(1), \dots, f_y(t+1)$ or any other $t+1$ points.
+  \end{itemize}
+\end{protocol}
+
+\begin{itemize}
+  \item The two conditions is required for the CEPS protocol (\autoref{prot:ceps}) to get security:
+  \begin{itemize}
+  	\item \textbf{Perfect correctness} With probability $1$ all players receive outputs that are correct based on the inputs supplied
+  	\item \textbf{Perfect privacy} Any subset $C$ of corrupt players of size at most $t<n/2$ learns no information beyond $\{x_j,y_j\}_{P_j \in C}$ from executing the protocol, regardless of their computing power
+  \end{itemize}
+  
+  \item \textit{Correctness} of the protocol
+  \begin{itemize}
+  	\item If the invariant defined in \autoref{prot:ceps} is maintained, then it is clear that once all gates are processes then for every wire going into an output gate players hold $[y;f_y]_t$, where $y$ is the correct value for that wire
+    \item The invariant holds since
+    \begin{itemize}
+    	\item It is trivially true for the input gates after the first phase
+      \item In the computation phase the protocol for each type of gate maintains the invariant by \textbf{Lemma 3.2}
+      \item For multiplication it holds by the definition of the recombination vector
+    \end{itemize}
+  \end{itemize}
+
+  \item \textit{Privacy} of the protocol
+  \begin{itemize}
+    \item The simulation paradigm is used i.e. to show that someone only learns information $X$ it is shown that everything that he or she sees can be efficiently recreated or simulated only given $X$
+    \begin{itemize}
+    	\item To express this $\view_j$ is defined to be all the values that $\P_j$ sees during execution of the protocol
+      \item $\view_j$ is a vector where $x_j$ first added and then each time $\P_j$ makes a random choice we add it to $\view_j$ and each time $\P_j$ receives a message the message is added to the $\view_j$
+      \item $\view_j$ is a random variable since it depends on the random choices made by $\P_j$ and other parties
+    \end{itemize}
+    \item Privacy means that there exists an efficient probabilistic algorithm a simulator $\S$ that given $\{x_j,y_j\}_{\P_j \in C}$ where it must be the case that
+    \[
+      S({x_j,y_j}_{\P_j \in C}) \stackrel{\text{perf}}{\equiv} \{\view_j\}_{\P_j \in C}
+    \]
+    \item Corrupted parties can only receive two types of messages from honest parties
+    \begin{itemize}
+    	\item \textbf{Type 1.} In input-sharing and multiplication gate, they receive shares in the random sharing $[x_i;f_{x_i}]_t$ respectively $[h(i);f_i]_t$ made by honest parties.
+    	\item \textbf{Type 2.} In output reconstruction, they receive all shares in $[y;f_y]_t$ for each output $y$ that is for a corrupted party
+    \end{itemize}
+    \item The \textit{privacy} of the protocol follows from the following two observations:
+    \begin{itemize}
+      \item \textbf{Observation 1.} All values sent by honest parties to corrupted parties in input sharing and multiplication are shared using random polynomials, $f_{x_i}$ respectively $f_i$, of degree at most $t$. Because there are at most $t$ corrupted parties, the set of corrupted parties receives at most $t$ shares of these polynomials, these shares are just uniformly random values
+      \item \textbf{Observation 2.} The values sent by honest parties to corrupted parties in output reconstruction to reconstruct $[y; f_y]_t$ could have been computed by the corrupted parties themselves given the values they know prior to output reconstruction plus the output $y$
+      \begin{itemize}
+      	\item This can be computed since they know $t$ points on the polynomial prior to the output reconstruction and then using the result they now know $t+1$ points and thus they are able to compute the polynomial $f_y$ 
+        \item Using this polynomial they are able to compute $f_y(i)$ for all honest parties $\P_i$, and $f_y(i)$ is exactly the share in $y$ sent by $\P_i$ in output reconstruction
+      \end{itemize}
+    \end{itemize}
+    \item Using these observations a simulator $\S$ can be constructed as follows
+    \begin{enumerate}
+    	\item It runs the corrupted parties on their own inputs according to the protocol. It can do so because it is given the inputs of the corrupted parties
+      \item During input sharing and multiplication, it simulates the shares sent to the corrupted parties from the honest parties by simply sampling uniformly random values, which produces the right distribution by observation 1.
+      \item In output reconstruction, it will for each output $t$ to a corrupted party compute the honest parties' shares in $[y;f_y]$ to be those consistent with the $t$ simulates shares of the corrupted parties and $f_y(0) = y$.
+      \begin{itemize}
+      	\item This can be done since $y$ is the output of a corrupted party and hence was given as input to $\S$. 
+        \item This gives the right distribution by observation 2
+      \end{itemize}
+    \end{enumerate}
+  \end{itemize}
+\end{itemize}
+
+\newpage
+
+%%% Local Variables:
+%%% mode: latexand
+%%% TeX-master: "cpt-noter"
+%%% End:

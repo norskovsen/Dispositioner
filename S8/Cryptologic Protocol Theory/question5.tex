@@ -1,0 +1,139 @@
+\section{The UC model}
+\subsection{Ideal Functionalities}
+\begin{itemize}
+  \item An ideal functionality will be an interactive agent
+  \item Each ideal functionality has a name $\F$
+  \item The interface of $\F$ is defined as follows
+  \begin{itemize}
+  	\item It has $n$ inports named $\F.\mathsf{in}_1, \dots, \F.\mathsf{in}_n$ and $n$ outports named $\F.\mathsf{out}_1, \dots, \F.\mathsf{out}_n$
+  	\item The $2n$ ports are called the protocol ports
+  	\item In addition to the protocol ports $\F$ has two special ports
+    \begin{itemize}
+  		\item An inport $\F.\mathsf{infl}$ called the influence port
+  		\item An outport $\F.\mathsf{leak}$ called the leakage port
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+\subsection{Protocols}
+\begin{itemize}
+  \item A simple protocol $\pi$ consists of just $n$ parties $\P_1, \dots, \P_n$, where each $\P_i$ is an agent
+  \begin{itemize}
+  	\item The protocol is the interactive system $\pi = \{\P_1, \dots, \P_n\}$
+  	\item A simple protocol has a protocol name $\F$
+    \begin{itemize}
+  		\item The protocol $\pi$ and the ideal functionality $\F$ that $\pi$ is supposed to implement has the same name
+    \end{itemize}
+  	\item It also has a resource name $R$ which is the name of the resource that $\pi$ uses for communication
+  	\item The agent $\P_i$ is called a simply party and it has six ports 
+    \begin{itemize}
+  		\item The port structure of $\P_i$ is derived from the names $\F$ and $R$
+  		\item It has an inport $\F.\mathtt{in}_i$ and an outport $\mathsf{F}.\mathtt{out}_i$ which is called \textbf{protocol ports}
+
+  		\item It has an outport named $R.\mathsf{in}_i$ and an inport named $R.\mathsf{out}_i$ which is called \textbf{resource ports}
+  		\item It has an inport named $R.\mathsf{infl}_i$ and an inport named $R.\mathsf{leak}_i$ which is called the special ports and are used to model corruption of $\P_i$ and to clock $\P_i$
+    \end{itemize}
+  \end{itemize} 
+
+  \item All parties have the following standard corruption behavior:
+  \begin{itemize}
+  	\item If a party $\P_i$ receives a special symbol (passive corrupt) on $R.\mathtt{infl}_i$, then $\P_i$ returns its internal state $\sigma$ on $R.\mathtt{leak}_i$
+    \begin{itemize}
+  		\item The internal state $\sigma$ consists of all randomness used by the party so far along with all inputs sent and received on its ports and the messages in the message queues of its inports
+    \end{itemize}
+  	\item If a party $\P_i$ receives a special symbol (active corrupt) on $R.\mathtt{infl}_i$ then $\P_i$ outputs its current state on $R.\mathtt{leak}_i$ and starts executing the following rules and only these rules:
+    \begin{itemize}
+  		\item On input $(\mathtt{read}, \P)$ on $\mathsf{R}.\mathtt{infl}_i$, where $\P$ is an inport of $\P_i$, it reads the next message $m$ on $\P$ and returns $m$ on $R.\mathtt{leak}_i$
+  		\item On input $(\mathtt{send}, \P, m)$ on $\mathsf{R}.\mathtt{infl}_i$, where $\P$ is an outport of $\P_i$, it sends $m$ to $\P$
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+\subsection{UC-Theorem}
+\begin{itemize}
+  \item Two systems are indistinguishable to an environment $\mathcal Z$ if $\mathcal Z$ cannot tell them apart (except with negligible advantage) by sending and receiving messages on the open ports of the systems
+  \begin{itemize}
+  	\item Two systems $S$, $F$ are called \textbf{indistinguishable} to a class $Z$ of environments if they are indistinguishable to all $\mathcal Z \in Z$ written $S \stackrel{Z}{\equiv} F$
+  \end{itemize}
+  \item \textbf{Definition 4.10 (Security for Simple Protocols)} Let $ST$ and $AT$ denote arbitrary protocol names. Let $F_{ST}$ be any ideal functionality with name $ST$, let $\pi_{st}$ be any simple protocol with protocol name $ST$ and resource name $AT$ and let $F_{AT}$ be any ideal functionality with name $AT$. Then $\pi_{ST} \diamond F_{AT}$ securely implements $F_{ST}$ in environments from $Z$ if there exists a simulator $\mathcal{S}$ for $\pi_{ST}$ such that $\pi_{ST} \diamond F_{AT} \stackrel{Z}{\equiv} F_{ST} \diamond \mathcal S$.
+  \begin{itemize}
+  	\item It is also written as $\pi_{ST} \diamond F_{AT} \stackrel{Z}{\geq} F_{ST}$
+  	\item $\pi_{ST} \diamond F_{AT}$ is at least as secure as $F_{ST}$ in environments from $Z$
+  \end{itemize}
+  \item It is required that if one takes a protocol $\pi$ and an environment $\mathcal Z$ for $\pi$, then $\mathcal Z \diamond \pi$ is again an environment
+  \item \textbf{Definition 4.13} Let $\text{Pro}$ be the set of simple and composed protocols in which all simple parties follows the rules for clocked entities and are recursive polytime
+  \item \textbf{Lemma 4.14} If $\pi_F \in \text{Pro}$ is a protocol with protocol name $\F$ and resource name $R$ and $\pi_R \in \text{Pro}$ is a protocol with protocol name $R$ and $\pi_{\F} \diamond \pi_R \neq \bot$ then $\pi_{\F} \diamond \pi_R \in \text{Pro}$
+  \item \textbf{Definition 4.15} Let $\text{Sim}$ be the set of interactive systems $\mathcal S$ that are a simulator for some protocol. i.e. for $\mathcal S \in \text{Sim}$, it holds that
+  \begin{itemize}
+  	\item There exists a protocol $\pi_{\F}$ (composed or simple) with protocol name $\F$ and an ideal functionality $\F_{F}$ with name $F$ such that $\pi_{F}$ and $\F_{F} \diamond \mathcal S$ have the same special ports
+  	\item $\mathcal S$ follows the rules for clocked entities and is recursive polytime
+  	\item $\mathcal S$ is corruption preserving
+  	\item $\mathcal S$ is clock preserving
+  \end{itemize}
+  \item \textbf{Lemma 4.16} If $\mathcal S \in \text{Sim}$ and $\mathcal T \in \text{Sim}$ and $\mathcal T$ have two open special ports that connect it to the ideal functionality ports of $\mathcal S$ and $\mathcal S \diamond \mathcal \tau \neq \bot$, then $\mathcal S \diamond \mathcal T \in \text{Sim}$
+  \item \textbf{Definition 4.17} $\text{Env}$ is an environment class if the following holds:
+  \begin{itemize}
+  	\item Each $\mathcal Z \in \text{Env}$ has the open port structure of an environment for some simple or composed protocol
+  	\item For all $\mathcal Z \in \text{Env}$ and all $\pi \in \text{Pro}$, where $\pi \diamond \mathcal Z \neq \bot$ and the protocol ports of $\pi$ connect to the protocol ports of $\mathcal Z$ in $\pi \diamond \mathcal Z$, it holds that $\pi \diamond \mathcal Z \in \text{Env}$.
+  	\item For all $\mathcal Z \in \text{Env}$ and all $\mathcal S \in \text{Sim}$, where $\mathcal S \diamond \mathcal Z \neq \bot$ and the simulation ports of $\mathcal S$ connect to the special ports of $\mathcal Z$, it holds that $\mathcal S \diamond \mathcal Z \in \text{Env}$
+  \end{itemize}
+  \item An environment $\mathcal Z$ is called \textbf{recursive polytime} if it is polytime and it makes at most an expected polynomial number of calls before it makes its guess
+  \item \textbf{Proposition 4.18} Let $\text{Env}^{poly}$ be the set of all recursive polytime systems that have an open port structure of an environment for some simple or composed protocol. Then $\text{Env}^{poly}$ is an environment class
+  \item \textbf{Definition 4.19 (UC Security for Protocols)} Let $\F_F$ be an ideal functionality with name $F$, let $\pi_F$ be a protocol with protocol name $\F$ and resource name $R$, and let $\F_R$ be an ideal functionality with name $R$. Let $\text{Env}$ be an environment class.
+  \begin{itemize}
+  	\item Then $\pi_F \diamond \F_R$ securely implements $\F_F$ in environments $\text{Env}$ if there exists a simulator $\mathcal S \in \text{Sim}$ for $\pi_F$ such that $\pi_{F} \diamond \F_R \stackrel{\text{Env}}{\equiv} \F_F \diamond \mathcal S$
+  	\item It is written $\pi_F \diamond \F_R \stackrel{\text{Env}}{\geq} \F_F$
+  	\item $\pi_F \diamond \F_R$ is at least as secure as $\F_F$ for environments in $\text{Z}$
+  \end{itemize}
+  \item \textbf{Theorem 4.20 (The UC Theorem)} Let $\text{Env}$ be an environments class. Let $\pi_F \in \text{Pro}$ be a protocol with protocol name $F$ and resource name $G$. Let $\pi_G$ be a protocol with protocol name $G$ and resource name $H$ for which $\pi_F \diamond \pi_G \neq \bot$. Let $\F_F$, $\F_G$ and $\F_H$ be ideal functionalities with names $\F$, $\mathsf{G}$ and $\mathsf{H}$. If $\pi_{\F} \diamond F_G \stackrel{\text{Env}}{\geq} \F_{F}$ and $\pi_{\G} \diamond \F_H \stackrel{\text{Env}}{\geq} \F_{G}$, then $(\pi_F \diamond \pi_G) \diamond \F_H \stackrel{\text{Env}}{\geq} \F_F$
+  \begin{proof}
+    First the premises of the theorem is written out to make the easier to use. \\
+    It is assumed that $\pi_\F \diamond \sgeq F_\G$ thus there exists a simulator $\mathcal S \in \Sim$ for $\pi_\F$ such that
+    \begin{equation}
+      \pi_\F \diamond \F_G \diamond \mathcal Z_1 \stackrel{\text{stat}}{\equiv} \F_F \diamond \mathcal S \diamond \mathcal Z_1 \label{eq:uc-assum1}
+    \end{equation}
+    for all $\mathcal Z_1 \in \Env$ for which the compositions make sense. \smallskip \\
+    It is also assumed that $\pi_{G} \diamond F_H \sgeq F_G$ thus there exists a simulator $\mathcal T \in \Sim$ for $\pi_G$ such that
+    \begin{equation}  
+      \pi_G \diamond \F_H \diamond \mathcal Z_2 \stackrel{\text{stat}}{\equiv} \F_G \diamond \mathcal T \diamond \mathcal Z_2 \label{eq:uc-assum2}
+    \end{equation}
+    for all $\mathcal Z_2 \in \Env$ for which the compositions make sense. \smallskip \\
+    Since we want to prove that $\pi_F \diamond \pi_G \diamond \F_H \sgeq \F_F$ this means that there should exist a simulator $\mathcal U \in \Sim$ for $\pi_F \diamond \pi_G$ such that
+    \begin{equation}  
+      \pi_F \diamond \pi_G \diamond \F_H \diamond \mathcal Z \stackrel{\text{stat}}{\equiv} \F_F \diamond \mathcal U \diamond \mathcal Z \label{eq:uc-conclusion}
+    \end{equation}
+    for all $\mathcal Z \in \Env$ for which the compositions make sense. \bigskip \\
+    Then it is shown that
+    \begin{equation}
+      \pi_F \diamond \pi_G \diamond \F_H \diamond \mathcal Z \stackrel{\text{stat}}{\equiv} \pi_F \diamond \F_G \diamond \mathcal T \diamond \mathcal Z \label{eq:uc-subresult1}
+    \end{equation}
+    by letting $\mathcal Z_2 \stackrel{\text{def}}{=} \pi_F \diamond \mathcal Z$ then we just have to prove that
+    \begin{equation}
+      \pi_G \diamond \F_H \diamond \mathcal Z_2 \stackrel{\text{stat}}{\equiv} \F_G \diamond \mathcal T \diamond \mathcal Z_2 
+    \end{equation}
+    which follows directly from Eq. (\ref{eq:uc-assum2}) \smallskip \\
+    Then it is shown that
+    \begin{equation}
+      \pi_F \diamond \F_G \diamond \mathcal T \diamond \mathcal Z \stackrel{\text{stat}}{\equiv} \F_F \diamond \mathcal S \diamond \mathcal T \diamond \mathcal Z \label{eq:uc-subresult2}
+    \end{equation}
+    by letting $\mathcal Z_1 \stackrel{\text{def}}{=} \mathcal T \diamond \mathcal Z$ then we just have to prove that
+    \begin{equation}
+      \pi_F \diamond \F_G \diamond \mathcal Z_1 \stackrel{\text{stat}}{\equiv} \F_F \mathcal S \diamond Z_1
+    \end{equation}
+    which follows directly from Eq. (\ref{eq:uc-assum1}) and thus per Eq. (\ref{eq:uc-subresult1}) and (\ref{eq:uc-subresult2}) and the transitivity of $\stackrel{\text{stat}}{\equiv}$ one can conclude that
+    \begin{equation}  
+      \pi_F \diamond \pi_G \diamond \F_H \diamond \mathcal Z \stackrel{\text{stat}}{\equiv} \F_F \diamond \mathcal S \diamond \mathcal T \diamond \mathcal Z
+    \end{equation}
+    which if $\mathcal U \stackrel{\text{def}}{=} \mathcal S \diamond \mathcal T$, then $\mathcal U \in \Sim$ and if plugging this in we get exactly Eq. (\ref{eq:uc-conclusion}) which was what we wanted to prove
+ \smallskip \\
+
+  \end{proof}
+\end{itemize}
+
+
+\newpage
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "cpt-noter"
+%%% End:

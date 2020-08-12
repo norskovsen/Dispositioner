@@ -1,0 +1,7 @@
+digraph Automaton {
+  graph [ dpi = 300 ]; 
+  rankdir = LR;
+  p [shape=circle,label="p"];
+  q [shape=circle,label="q"];
+  p -> q [label="≤k", style="dotted"];
+}

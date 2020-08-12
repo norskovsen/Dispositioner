@@ -1,0 +1,12 @@
+digraph Automaton {
+  graph [ dpi = 300 ]; 
+  rankdir = LR;
+  1 [shape=doublecircle,label="A"];
+  in [shape=plaintext,label=""];
+  in -> 1;
+  2 [shape=circle,label="B"];
+  1 -> 2 [label="0"];
+  1 -> 1 [label="1"];
+  2 -> 1 [label="0"];
+  2 -> 2 [label="1"];
+}

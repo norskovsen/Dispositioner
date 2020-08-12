@@ -1,0 +1,191 @@
+\section{The linear programming model and LP algorithms}
+\subsection{Lineær programmering}
+\begin{itemize}
+  \item Variablerne i et lineær programmeringsproblem bliver kaldet decision variable og bliver betegnet på følgende måde:
+  \begin{equation*}
+    x_j, \ j=1,2,\dots,n
+  \end{equation*}
+  \item I lineær programmering skal man optimerer en lineær funktion af decision variablerne kaldet objektiv funktionen
+  \begin{equation*}
+	  \zeta = c_1x_1 + c_2x_2 + \dots + c_nx_n
+  \end{equation*}
+  \item Restrektionerne for problemet er på følgende form  
+  \begin{equation*}
+    a_1x_1 + a_2x_2 + \dots + a_nx_n \Bigg\{ \ \begin{matrix} \leq \\ = \\ \geq \end{matrix} \ \Bigg\} b
+  \end{equation*}
+	\item Et lineær programmeringsproblem på standard form er et problem på følgende form:
+  \begin{align*}
+    \text{max} \hspace{20pt} c_1x_1 + c_2x_2 + \cdots + c_n x_n & \\
+    \text{s.t.} \ a_{11} x_1 + a_{12} x_2 + \cdots + a_{1n} x_n &\leq b_1 \\
+     a_{11} x_1 + a_{22} x_2 + \cdots + a_{2n} x_n &\leq b_2 \\
+    \vdots \hspace{50pt} & \\
+     a_{m1} x_1 + a_{m2} x_2 + \cdots + a_{mn} x_n &\leq b_m \\
+    x_1, x_2, \dots x_n \geq 0 
+  \end{align*}
+  \item Et hvilket som helst lineær programmeringsproblem kan laves om til et på standard form:
+  \begin{itemize}
+    \item Et minimeringsproblem kan blive lavet om til et maksimeringsproblem ved at gange med $-1$
+  	\item En $=$ restrektion bliver lavet om til en $\leq$ og en $\geq$ restrektion 
+    \item En $\geq$ restrektion bliver lavet om til en $\leq$ restrektion ved at multiplicere med $-1$ på begge sider
+  \end{itemize} 
+  \item En lineær programmeringsproblem i standard form på matrix form:
+  \begin{align*}
+    \text{max} \ \bm c^T \bm x & \\
+    \text{s.t.} \ A \bm x \leq \bm b \\
+      \bm{x} \geq 0 
+  \end{align*}
+  \item Slack variabler $w_1, \dots, w_m$ kan blive tilføjet og dermed får man følgende
+  \begin{align*}
+    \text{max} \ \bm c^T \bm x & \\
+    \text{s.t.} \ A \bm x + \bm w = \bm b\\
+      \bm{x}, \bm w \geq 0 
+  \end{align*}
+  \item \textbf{Fundamental Theorem of Linear Programming:} For et arbitrær lineært program i standard form er følgende udsagn sande
+  \begin{enumerate}
+  	\item Hvis det ikke nogen optimal løsning er problemet enten infeasible eller unbounded 
+    \item Hvis der er en feasible løsning, så eksisterer en basic feasible løsning
+    \item Hvis der eksisterer en optimal løsning eksisterer, der en basic optimal løsning
+  \end{enumerate}  
+\end{itemize}
+
+\subsection{Simplex algoritmen}
+\subsubsection{Dictionary}
+\begin{itemize}
+	\item Hvis man vælger $m$ variabler fra $(x,w)$ bliver deres værdi unik defineret ud fra formelen $A \bm x + \bm w = \bm b$
+  \begin{itemize}
+  	\item Kaldet en base
+    \item Ikke enhvert valg af variabler giver en base
+    \item Hvis man vælger de $m$ slack variabler $w$ giver det en basis
+  \end{itemize}
+  \item En basis løsning fås ved at sætte alle nonbasic variabler til 0
+  \item Et dictionary er det system der beskriver en samling af basis og udtrykker objektiv funktionen ud fra en samling af nonbasic variabler.  
+  \begin{itemize}
+  	\item kan unikt beskrives ud fra en base
+  \end{itemize}
+  \item Hvis en løsning overholder restrektionerne kaldes det en feasible løsning
+  \item Hvis en løsning er optimal kaldes det for en optimal løsning
+	\item $\mathcal B$ bliver brugt til at beskrive samlingen af indexer fra $\{1,2,\dots, n+m\}$ som svarer til basisvariablerne
+  \begin{itemize}
+  	\item Det starter med at være $\mathcal B = \{n+1, n+2, \dots, n+m\}$
+  \end{itemize}
+	\item $\mathcal N$ bliver brugt til at beskrive indexerne, som svarer til nonbasic variablerne
+  \begin{itemize}
+  	\item Det starter med at være $\mathcal N = \{1,2, \dots, n\}$ 
+  \end{itemize}
+  \item I en given iteration ser dictionariet således ud:
+  \begin{align*}
+    \zeta &= \bar \zeta + \sum_{j \in \mathcal N} \hat c_j x_j \\
+    x_i &= \bar b_i - \sum_{j \in \mathcal N} \bar a_{ij} x_j \quad i \in \mathcal B
+  \end{align*}
+  \item Hvis alle ratios i en given række er problemet \textbf{unbounded}  
+	\item I de fleste tilfælde kører Simplex Algorithmen i lineær tid i antallet af restrektioner og variabler
+  \item I værste tilfælde kører den i exponentiel tid
+  \begin{itemize}
+  	\item Dette kan opnåes ved at vælge specifikker trælse problemer
+  \end{itemize}
+\end{itemize} 
+
+\subsubsection{Pivot}
+\begin{itemize}
+	\item Simplex algoritmen virker ved gå fra et dictionary til et andet 
+  \begin{itemize}
+  	\item For at gøre dette vælges først en entering variable ud fra en pivoting rule 
+    \item Entering variable skal have en positiv koefficient
+    \begin{itemize}
+    	\item i.e. vælg $k$ fra $\{j \in \mathcal N \mid \bar c_j > 0 \}$
+    \end{itemize}
+    \item Leaving variable vælges på følgende måde vælg $l$ fra $\{i \in \mathcal B \mid \hat a_{ik} > 0 \text{ and } \hat b_i / \hat a_{ik} \text{ is minimal }\}$
+    \begin{itemize}
+    	\item Dette sørger for at alle restrektioner stadig er overholdt
+    \end{itemize}
+  \end{itemize}
+  \item Et degenerate dictionary er et dictionary, hvor en af $\hat b_i$ forsvinde for en $i \in \mathcal B$
+  \begin{itemize}
+  	\item Dette kan medfører cycling, hvor algorithmen kommer til at gøre for evigt
+    \item Deres findes pivot regler, som er cycling fri.
+    \item Simplex algorithmen terminerer kun ikke hvis den cycler  
+  \end{itemize}
+  \item The Lexikografiske metode er en noncycling pivotregel 
+  \begin{itemize}
+  	\item Der bliver tilføjet små positive $\epsilon_1, \dots, \epsilon_m$ tal for hver restrektion
+    \item Der skal gælde at: 
+    \begin{equation*}
+      0<\epsilon_m << \dots << \epsilon_2 << \epsilon_1 <<  \text{alle andre tal} 
+    \end{equation*}
+    \item I stedet for at bruge specifikke værdier bliver der brugt abstrakte symboler med de angivende engenskaber  
+    \item \textbf{Theorem 3.2.} Simplex metoden terminerer altid givet at leaving variablen bliver valgt ved hjælp af den Lexikografiske regel
+    \begin{proof} 
+     Det er nok at vise at dictionariet aldrig bliver degenerate. Siden at $\epsilon_i$erne operer på forskellige skalaer kan de ikke udligne hinanden. Derfor kan de blive opfattet som en samling af uafhængige variabler. Hvis vi hiver $\epsilon$ termerne ud fra det første dictionary får vi følgende
+    \begin{equation*}
+      \begin{matrix}  
+        \epsilon_1 & & & \\
+        & \epsilon_2 & & \\
+        & & \ddots & \\
+        & & & \epsilon_m \\
+      \end{matrix}
+    \end{equation*}
+    Efter nogle pivoter bliver $\epsilon$ termerne udtrykket ud fra et system af lineære kombinationer i.e. 
+    \begin{equation*}
+      \begin{matrix}  
+        r_{11}\epsilon_1 & + & r_{21}\epsilon_2 & \dots & + & r_{1m}\epsilon_m \\
+        r_{21}\epsilon_1 & + & r_{22}\epsilon_2 & \dots & + & r_{2m}\epsilon_m \\
+        \vdots & & \vdots & \ddots &  & \vdots \\
+        r_{m1}\epsilon_1 & + & r_{m2}\epsilon_2 & \dots & + & r_{mm}\epsilon_m 
+      \end{matrix}
+    \end{equation*}
+    Siden dette system af lineære kombinationer er opnået ud fra en pivot operationer fra den originale må den have rank $m$ Dette betyder at der mindst må være et ikke nul $r_{ij}$ i hver række. Dette betyder derfor at dictionariet ikke blive degenerate. 
+  
+    \end{proof}
+  \end{itemize}
+  \item Blands rule er en noncycling pivotregel 
+  \begin{itemize}
+  	\item Vælger den pivot med lavest indeks $k$
+  \end{itemize}
+\end{itemize} 
+
+\subsubsection{Auxilary Dictionary}
+\begin{itemize}
+	\item Hvis starting dictionariet ikke er feasible can følgende auxiliary dictionary bruges
+  \begin{align*}
+    \text{max} & \quad -x_0 \\
+    \text{s.t.} & \quad \sum_{j=1}^n a_{ij} x_j - x_0 \leq b_i \quad i = 1,2,\dots, m \\
+                & \hspace{64pt} x_j \geq 0 \quad j=0,1,\dots,n
+  \end{align*}
+  \item Det er nemt at finde en feasible løsning til
+  \item Hvis den har et negativt resultat eksisterer der ikke en feasible løsning til det originale problem
+  \item Man kører simplex på dette og bruger det resulterende dictionary i det originale problem 
+  \item Dette bliver kaldt \textbf{Phase I} 
+\end{itemize}
+
+\subsection{Elipsoid algoritmen}
+\begin{itemize}
+	\item Elipsoid algoritmen er et alternativ til Simplex Algorithmen til at løse lineær programmeringsproblemer  
+  \begin{itemize}
+  	\item Den kører i worst case polynomiel tid
+  \end{itemize}
+  \item Den virker på følgende måde
+  \begin{enumerate}
+  	\item Indkreds (en muligt subset af) alle mulige feasible points indenfor en stor bold (i.e. elipsoid)
+    \item Test hvorvidt centrum af ellipsoide er feasible
+    \item Hvis ikke inddel ellipsoide i to dele ved brug af en hyperplan, hvor alle mulige feasible points er i den ene del  
+    \item Find en ny mindre ellipsoide som omgiver denne halv ellipsoide (vælg den mindste) og forsæt 
+  \end{enumerate}
+  \item Grunden til at denne algoritme virker er følgende
+  \begin{itemize}
+  	\item For hver iteration bliver volumen en factor $2^{-1/2(n+1)}$
+    \item Første ellipsoide har masse mindre end $(2n^22^{2L})^n$ 
+    \item Hvis systemet er fesible, har den fesible region inden for bolden $B(0,n2^L)$ en volumen på mindst $2^{-(n+2)L}$
+    \item $K=16n(n+1)L$ iteration er krævet
+  \end{itemize}
+  \item Tekniske problemer
+  \begin{itemize}
+  	\item Skal lave feasible region en smule støre for at sikre sig en positiv volumen
+    \item Skal approximere kvadratrod
+  \end{itemize}
+\end{itemize}
+
+\newpage
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "optimering-noter"
+%%% End:

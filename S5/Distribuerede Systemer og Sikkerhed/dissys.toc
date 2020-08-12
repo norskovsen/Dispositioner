@@ -1,0 +1,90 @@
+\babel@toc {danish}{}
+\contentsline {section}{\numberline {1}Confidentiality}{5}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Disposition}{5}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Secret key system}{6}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Perfect Secrecy}{6}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Computational Secrecy}{6}{subsection.1.4}%
+\contentsline {subsubsection}{\numberline {1.4.1}Secret key}{7}{subsubsection.1.4.1}%
+\contentsline {subsubsection}{\numberline {1.4.2}Public key}{8}{subsubsection.1.4.2}%
+\contentsline {subsubsection}{\numberline {1.4.3}RSA}{9}{subsubsection.1.4.3}%
+\contentsline {section}{\numberline {2}Authentication}{11}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Disposition}{11}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Secret key}{12}{subsection.2.2}%
+\contentsline {subsubsection}{\numberline {2.2.1}Unconditional}{12}{subsubsection.2.2.1}%
+\contentsline {subsubsection}{\numberline {2.2.2}Pratiske Systemer}{12}{subsubsection.2.2.2}%
+\contentsline {subsection}{\numberline {2.3}Public key}{13}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}RSA signature eksempel}{14}{subsubsection.2.3.1}%
+\contentsline {subsubsection}{\numberline {2.3.2}Hash and Sign}{14}{subsubsection.2.3.2}%
+\contentsline {section}{\numberline {3}Key Management and Infrastructure}{15}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Disposition}{15}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Problem}{16}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Key Distribution Centers}{16}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Certification Authorities}{16}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Password}{17}{subsection.3.5}%
+\contentsline {subsubsection}{\numberline {3.5.1}Valg og gæt af adgangskode}{18}{subsubsection.3.5.1}%
+\contentsline {subsubsection}{\numberline {3.5.2}Brug og eavesdropping af adgangskode}{18}{subsubsection.3.5.2}%
+\contentsline {subsubsection}{\numberline {3.5.3}Opbevaring og tilegnelse af password - Brugerens side}{18}{subsubsection.3.5.3}%
+\contentsline {subsubsection}{\numberline {3.5.4}Valg og gæt af password - verificereren side}{18}{subsubsection.3.5.4}%
+\contentsline {subsection}{\numberline {3.6}Hardware}{19}{subsection.3.6}%
+\contentsline {subsection}{\numberline {3.7}Biometrics}{20}{subsection.3.7}%
+\contentsline {section}{\numberline {4}Network Security Mechanisms}{21}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Disposition}{21}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Authenticated key exchange}{22}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}SSL/TLS}{22}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Diffie Hellman Key Exchange og forward secrecy}{24}{subsection.4.4}%
+\contentsline {section}{\numberline {5}System Security Mechanism}{25}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Disposition}{25}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Trusted computing base}{26}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Security Policies}{26}{subsection.5.3}%
+\contentsline {subsubsection}{\numberline {5.3.1}Security Policies modeller}{26}{subsubsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.4}Access control}{28}{subsection.5.4}%
+\contentsline {subsubsection}{\numberline {5.4.1}Dynamisk Access control matrix}{28}{subsubsection.5.4.1}%
+\contentsline {section}{\numberline {6}Threats and Pitfall}{30}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Disposition}{30}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}STRIDE}{31}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}X.800}{31}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}EINOO}{32}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}TPM}{32}{subsection.6.5}%
+\contentsline {subsection}{\numberline {6.6}Angrebseksempler}{33}{subsection.6.6}%
+\contentsline {subsubsection}{\numberline {6.6.1}IBM 4758}{33}{subsubsection.6.6.1}%
+\contentsline {subsubsection}{\numberline {6.6.2}The Heart Bleed Bug}{34}{subsubsection.6.6.2}%
+\contentsline {subsubsection}{\numberline {6.6.3}Unicode Exploit}{35}{subsubsection.6.6.3}%
+\contentsline {section}{\numberline {7}Consistency}{36}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Disposition}{36}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Problem}{37}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}First In, First Out}{37}{subsection.7.3}%
+\contentsline {subsection}{\numberline {7.4}Causal order}{38}{subsection.7.4}%
+\contentsline {subsubsection}{\numberline {7.4.1}Causal Past Relation}{38}{subsubsection.7.4.1}%
+\contentsline {subsubsection}{\numberline {7.4.2}Protocol til Causal Consistent Kommunikation}{38}{subsubsection.7.4.2}%
+\contentsline {subsubsection}{\numberline {7.4.3}Vector clocks}{38}{subsubsection.7.4.3}%
+\contentsline {subsection}{\numberline {7.5}Total order}{40}{subsection.7.5}%
+\contentsline {section}{\numberline {8}Synchronous Agreement}{41}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Disposition}{41}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Round based protocols}{42}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Scheduled Broadcast protocols}{42}{subsection.8.3}%
+\contentsline {subsubsection}{\numberline {8.3.1}Dolev-Strong}{43}{subsubsection.8.3.1}%
+\contentsline {subsubsection}{\numberline {8.3.2}Solution without signatures}{44}{subsubsection.8.3.2}%
+\contentsline {subsection}{\numberline {8.4}Lower bound on round complexity}{45}{subsection.8.4}%
+\contentsline {section}{\numberline {9}Asynchronous Agreement}{46}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Disposition}{46}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Asynchronous model}{47}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Asynchronous Byzantine Agreement}{47}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Graded Agreement}{47}{subsection.9.4}%
+\contentsline {subsection}{\numberline {9.5}From graded agreement to Terminating agreement}{48}{subsection.9.5}%
+\contentsline {subsection}{\numberline {9.6}Impossibility of Deterministic Agreement}{50}{subsection.9.6}%
+\contentsline {section}{\numberline {10}State-Machine Replications}{53}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Disposition}{53}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}State Machine}{54}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}Replicated State Machine}{54}{subsection.10.3}%
+\contentsline {subsection}{\numberline {10.4}Totally ordered broadcast}{55}{subsection.10.4}%
+\contentsline {subsubsection}{\numberline {10.4.1}Synchronous Implementation}{56}{subsubsection.10.4.1}%
+\contentsline {section}{\numberline {11}Blockchains, How to grow a tree}{57}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Disposition}{57}{subsection.11.1}%
+\contentsline {subsection}{\numberline {11.2}Blockchains}{58}{subsection.11.2}%
+\contentsline {subsection}{\numberline {11.3}Lottery Systems - Proof of Stake}{58}{subsection.11.3}%
+\contentsline {subsubsection}{\numberline {11.3.1}Protocol}{59}{subsubsection.11.3.1}%
+\contentsline {subsection}{\numberline {11.4}Properties in Standard Scenario}{61}{subsection.11.4}%
+\contentsline {subsubsection}{\numberline {11.4.1}Tree growth}{61}{subsubsection.11.4.1}%
+\contentsline {subsubsection}{\numberline {11.4.2}Chain quality}{62}{subsubsection.11.4.2}%
+\contentsline {subsubsection}{\numberline {11.4.3}Limited roll-back}{62}{subsubsection.11.4.3}%
+\contentsline {subsection}{\numberline {11.5}Lack of finality problems}{63}{subsection.11.5}%

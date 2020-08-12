@@ -1,0 +1,132 @@
+\subsection{Basic Seperation Logic}
+\subsubsection{Star magic wand and weak rule}
+\begin{itemize}
+  \item A proposition $P$ escribes a set of resources
+  \begin{itemize}
+  	\item $\mathcal R$ is used for the set of resources and $r_1$, $r_2$ etc. for elements in $\mathcal R$
+    \item It is assumed that 
+    \begin{itemize}
+    	\item There is an empty resource
+      \item There is a way to compose resources $r_1$ and $r_2$ denoted $r_1 \cdot r_2$
+      \item The composition defindes for resources are disjoint denoted $r_1 \# r_2$
+    \end{itemize}
+  \item The intuition for $P \vdash Q$ is that all resources in $P$ are also in $Q$ i.e.
+  \begin{equation*}
+    \forall r \in \mathcal R. r \in P \Rightarrow r \in Q 
+  \end{equation*}
+  \end{itemize}
+  \item $P*Q = \{r \mid \exists r_1, r_2, r= r_1 \cdot r_2 \land r_1 \in P \land r_2 \in Q \}$
+  \item $P \magic Q = \{r \mid \forall r_1. r_1 \# r \land r_1 \in P \Rightarrow r \cdot r_1 \in Q\}$
+  \item The following rule $*$-\texttt{WEAK}
+  \begin{equation*}
+    \frac{}{P_{1} * P_{2} \vdash P_{1}}
+  \end{equation*}
+  makes iris into a affine seperation logic
+  \begin{itemize}
+  	\item Intuitively this rules implies that propositions are interpreted by upwards closed set of resources
+  \begin{itemize}
+  	\item $r_{1} \geq r_{2}$ iff $r_{1}=r_{2} \cdot r_{3},$ for some $r_{3}$
+    \item Suppose $r_{1} \in P_{1}$ and that $r \geq r_{1} .$ Then there is $r_{2}$ such that $r=r_{1} \cdot r_{2}$
+    \item Let $P_{2}$ be $\left\{r_{2}\right\}$
+    \item Then $r_{1} \cdot r_{2} \in P_{1} * P_{2}$
+    \item By the weakening rule, we then also have that $r=r_{1} \cdot r_{2} \in P_{1}$
+    \item Hence $P_{1}$ is upwards closed.
+  \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Hoare triples and points to predicates}
+\begin{itemize}
+	\item To get basic separation logic the basic logic of resources are extended with two new predicates
+  \begin{itemize}
+    \item Hoare triples are basic predicates about programs
+    \item The points-to predicate $x \hookrightarrow v$ is the basic proposition about resources
+  \end{itemize}
+  \item The hoare triple satisfy the following type rule
+  \begin{equation*}
+  \frac{\Gamma \vdash P: \text { Prop } \quad \Gamma \vdash e: E x p \quad \Gamma \vdash \Phi: V a l \rightarrow \text { Prop }}{\Gamma \vdash \{P\} e\{\Phi\}: \text { Prop }}
+  \end{equation*}
+  The intuitive reading of the Hoare triple $\{P\} e\{\Phi\}$ is that
+  \begin{itemize}
+  	\item If the program $e$ is run in a heap $h$ satifying $P$, then the computation does not get stuck
+    \begin{itemize}
+    	\item Computation get stuck when one tries to something illegal such as trying to dereference a location that has not been allocated
+    \end{itemize}
+  	\item If it terminates with a value $v$ and a heap $h'$ then $h'$ satisfies $\Phi(v)$
+  	\item $\Phi$ has two purposes
+    \begin{itemize}
+  		\item It describes the value $v$
+  		\item It describes the resources after the execution of the program
+    \end{itemize}
+  \end{itemize}
+  \item The points to predicate satisfy the following type rule
+  \begin{equation*}
+    \frac{\Gamma \vdash \ell: \text { Val } \quad \Gamma \vdash v: \text { Val }}{\Gamma \vdash \ell \hookrightarrow v: \text { Prop }}
+  \end{equation*}
+  \begin{itemize}
+  	\item It describes a set of heap fragments that map a location 
+    \begin{equation*}
+      x \hookrightarrow v = \{h \mid x \in \text{dom}(h) \land h(x) = v\}
+    \end{equation*}
+    \item Given that one has $\ell \hookrightarrow v$, then one have the ownership of $\ell$ and hence can may modify what $\ell$ pointsto, without invalidating invariants of other parts of the program.
+    \item The essential properties of the points-to predicate is that they are not duplicable i.e.
+    \begin{equation*}
+      \ell \hookrightarrow v * \ell \hookrightarrow v^{\prime} \vdash \text { False }
+    \end{equation*}
+    and that it is a partial function in the sense that
+    \begin{equation*}
+      \ell \hookrightarrow v \wedge \ell \hookrightarrow v^{\prime} \vdash v=_{v a l} v^{\prime}
+    \end{equation*}	
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Hoare triples rules}
+\begin{itemize}
+  \item The frame rule (\texttt{HT-FRAME})
+  \begin{equation*}
+    \frac{S \vdash\{P\} e\{v . Q\}}{S \vdash\{P * R\} e\{v . Q * R\}}
+  \end{equation*}
+  expresses if an expression $e$ satisfies a Hoare triple, then it will preserve any resources described by a ``frame'' $R$ disjoint from the resources described by the precondition $P$
+  \item The bind rule (\texttt{HT-BIND})
+  \[
+  \begin{prooftree} 
+    \hypo{E\text{ is an eval. context}}
+    \hypo{S \vdash \{P\} e \{v.Q\}}
+    \hypo{S \vdash \forall v. \{Q\} E[v] \{w.R\}} 
+    \infer3{S \vdash \{P\} E[e] \{w.R\}}
+  \end{prooftree}
+  \]
+  is used to transform the verification of a big program $E[e]$ to the verification of individual steps for which there is basic axoims for Hoare triples
+  \item \textbf{Persistent propositions} is propositions which do not rely on any exclusive resources
+  \begin{itemize}
+  	\item The essential properties of persistents propositions are the \texttt{HT-EQ} and \texttt{HT-HT}
+  	\item The following axiom holds for any \textbf{persistent propositions} $P$ and any proposition $Q$
+    \begin{equation*}
+      P \wedge Q \vdash P * Q \quad \text { if } P \text { is persistent. }
+    \end{equation*}
+    \item Intuitively, if $P$ is permistent, then it does not depend on any exclusive resources
+    \item The following entailment always holds
+    \begin{equation*}
+    P * Q \vdash P \land Q
+    \end{equation*}
+    \end{itemize}
+  \item The rule of consequence (\texttt{HT-CSQ}):
+  \[
+  \begin{prooftree} 
+    \hypo{\text{S persistent}}
+    \hypo{S \vdash P \Rightarrow P'}
+    \hypo{S \vdash \{P'\} e \{v.Q'\}}
+    \hypo{S \vdash \forall u. Q'[u/v] \Rightarrow Q[u/v]} 
+    \infer4{S \vdash \{P\} e \{v.Q\}}
+  \end{prooftree}
+  \]  
+  \begin{itemize}
+    \item It states that we can strengthen the precondition and weaken the postcondition
+  	\item The context must be persistent
+  	\item This rules is often used and it is often used implicitly
+  \end{itemize}
+\end{itemize}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "pav-noter"
+%%% End:

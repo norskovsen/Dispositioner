@@ -1,0 +1,206 @@
+\section{Zero-Knowledge}
+\begin{itemize}
+  \item Loose definition of \textbf{zero-knowledge}: a protocol is zero-knowledge if it communicates exactly the knowledge that was intended, an no (zero) extra knowledge
+  \item The user, who is the one wanting to convince the other about the truth of some claim will be called the \textbf{Prover} $P$
+  \item The host, who is interested in checking that the claim is true will be called the \textbf{verifier} $V$
+\end{itemize}
+
+\subsection{Simple Example}
+\begin{protocol}{Simple Protocol}{simple-zero-knowledge}
+  \begin{enumerate}
+  	\item If the prover claims to be $A$ the verifier chooses a random message $M$ and sends the ciphertext $C = P_A(M)$ to the prover
+  	\item The prover decrypts $C$ using $S_A$ and sends the result $M'$ to the verifier
+  	\item The verifier accepts the identity of the prover if and only if $M' = M$
+  \end{enumerate}
+\end{protocol}
+\begin{itemize}
+  \item \autoref{prot:simple-zero-knowledge} is not zero knowledge, since an adversary could pretend to be the verifier and forward the $C$ message from the real verifier thereby using the Prove to falsely prove that it itself was the Prover
+  \begin{itemize}
+  	\item Thereby an adversary can use the information send which is not optimal
+    \item The verifier needs to somehow show that he knows what the message decrypts to without revealing it before the prover reveals whether he can decrypt it
+  \end{itemize}
+
+  \item Assume that we have a commitment scheme that lets the prover commit to any message that can be encrypted by the public key system
+  \item Let $\text{commit}_{pk}(r,M)$ denote a commitment to message $M$
+  \item \autoref{prot:advance-zero-knowledge} is a way to fix \autoref{prot:simple-zero-knowledge} such that it becomes zero knowledge using commitment schemes
+
+\end{itemize}
+\begin{protocol}{Zero Knowledge Version of Simple Protocol}{advance-zero-knowledge}
+  \begin{enumerate}
+  	\item If the prover claims to be $A$, the verifier chooses a random messages $M$, and sends the cipher text $C=P_A(M)$ to the prover
+  	\item The prover decrypts $C$ using $S_A$ and sends a commitment to the result $\text{commit}_{pk}(r,M')$ to the verifier
+  	\item The verifier sends $M$ to the prover
+  	\item The prover checks if $M = M'$. If not he stops the protocol he opens the commitments, i.e. he sends $r,M'$ to the verifier
+  	\item The verifier accepts the identity of the prover if and only if $M' = M$ and the pair $r,M'$ correctly opens the commitment 
+  \end{enumerate}
+\end{protocol}
+
+\subsection{Interactive Proof Systems}
+\begin{itemize}
+  \item The protocols defined will take place as interactions between two \textbf{Interactive Turing Machines} i.e. ordinary probabilistic Turing Machines that are in addition equipped with communication tapes allowing a machine to send and receive messages from the other one
+  \item For an interactive proof system the following is assumed
+  \begin{itemize}
+  	\item The prover $P$ has infinite computing power
+  	\item The verifier $V$ is polynomial time bounded
+  \end{itemize}
+  \item The machines get a common input string $x$
+  \begin{itemize}
+  	\item Running the machines an input $x$ results in $V$ outputting \textbf{accept} or \textbf{reject}
+  	\item And thus the pair $(P,V)$ accepts or rejects $x$ accordingly
+  \end{itemize}
+  \item A binary language $L \subset \{0,1\}^*$ is given and is specialised to the concrete statement that a certain logical statement is true namely that $x \in L$
+  \item \textbf{Definition 4} The pair $(P,V)$ is an interactive proof system for $L$ if it satisfies the following two conditions
+  \begin{itemize}
+  	\item \textbf{Completeness:} If $x \in L$, then the probability that $(P,V)$ rejects $x$ is negligible in the length of $x$
+  	\item \textbf{Soundness:} If $x \notin L$, then for any prover $P^*$, the probability that $(P^*,V)$ accepts $x$ is negligible in the length of $x$
+  \end{itemize}
+  \item There is no way to cheat the verifier even using infinite computing power
+\end{itemize}
+
+\subsection{Interactive Arguments}
+\begin{itemize}
+  \item Another variant of Interactive proof systems is know as \textbf{Interactive Arguments} and has more direct relations to practical protocols
+  \begin{itemize}
+  	\item In this type of protocol we want the prover to be polynomial time
+  	\item We are only concerned about the polynomial time provers cheating the verifier
+  \end{itemize}
+
+  \item The simplest way to define an interactive argument for a language $L$, is to say that it is an interactive proof system, but with two changes
+  \begin{itemize}
+  	\item The honest prover is required to be probabilistic polynomial time
+    \begin{itemize}
+  		\item The only advantage over the verifier is that it has a private auxiliary input
+    \end{itemize}
+  	\item The completeness condition says that for every $x \in L$, there is an auxiliary input that allows the prover to convince the verifier almost always
+  	\item The soundness condition says "for any probabilistic polynomial time prover", instead of "for any prover"
+  \end{itemize}
+\end{itemize}
+
+\subsection{Zero-Knowledge}
+\begin{itemize}
+% - Zero-Knowledge can be seen as an extra property that an interactive proof system might have
+% - We want to ensure that the whatever strategy the verifier follows and whatever priori knowledge he may have, he learns nothing new except for the truth of the provers claim
+% 	- Done by requiring assuming the prover's claim is true the interaction between the prover and verifier can be efficiently simulating without interacting with the prover
+  \item \textbf{The simulation paradigm:} by seeing $Y$ a party learns nothing more than $X$ if $Y$ can be efficiently generated from $X$
+  \item A verifier that tries to cheat the prover can be modelled by an arbitrary probabilistic polynomial time machine $V^*$
+  \begin{itemize}
+  	\item It gets an auxiliary input $\delta$ of length at most some fixed polynomial of the length of input $x$
+  	\item The auxiliary input represents the prior knowledge that $V^*$ might have
+  \end{itemize}
+
+  \item A conversation between $P$ and any verifier $V^*$ is the ordered concatenation of all messages sent in an execution of the protocol
+  \begin{itemize}
+  	\item This means that the pair $(P,V^*)$ can be modelled as a machine that gets input $x$ and $\delta$ (only to $V^*$) and outputs a conversation
+  \end{itemize}
+		
+  \item \textbf{Definition 5} An interactive proof system of argument $(P,V)$ for a language $L$ is zero-knowledge if for every probabilistic polynomial time verifier $V^*$, there is a simulator $M_{V^*}$ running in expected polynomial time, such that we have $M_{V^*} \sim^c (P,V)$ on input $x \in L$ and arbitrary $\delta$ (as input to $V^*$ only)
+    \begin{itemize}
+      \item If for some protocol $M_{V^*} \sim^p (P,V)$ or $M_{V^*} \sim^s (P,V)$ then the protocol is respectively \textbf{perfect zero-knowledge} and \textbf{statistical zero-knowledge}
+  \end{itemize}
+  \item The simulator has some degrees of freedom that a prover does not have when executing the real protocol and thus it does it does not violate the general definition it can e.g. generate messages in any order it wants
+\end{itemize}
+
+\subsection{Zero-Knowledge Protocol Example}
+\begin{protocol}{Graph Isomorphism Zero-Knowledge Protocol}{graph-isomorph-zero}
+  The protocol works by repeating sequentially the following steps $n$ times:
+  \begin{enumerate}
+  	\item $P$ chooses a random permutation $\phi$ on $n$ points and sends $H=\phi(G_0)$ to $V$
+    \item $V$ chooses at random a bit $b$, and sends it to $P$.
+    \item If $b=0$, $P$ sets $\psi = \phi^{-1}$ else he sets $\psi = \pi\phi^{-1}$. He sends $\psi$ to $V$ who checks that $\psi(H) = G_b$ and rejects immediately if not
+  \end{enumerate}
+  The verifier $V$ only accepts if all $n$ iterations were completed successfully
+\end{protocol}
+\begin{itemize}
+  \item \autoref{prot:graph-isomorph-zero} is a protocol for the graph isomorphism problem: 
+  \begin{itemize}
+  	\item The common input is a pair of graphs $G_0$, $G_1$ with $n$ nodes
+    \item The prover claims the graphs is isomorphic i.e. there exists a permutation $\pi$ such that permuting the nodes of $G_0$ according to $\pi$ one obtains the graph $G_1$ 
+    \[
+      \pi(G_0) = G_1
+    \]
+    \item $n$ is used as a measure of the length of the input
+    \item The prover does not need to be infinitely powerful, put it is allowed by the definition of proof systems, it is enough that he knows an isomorphism $\pi$ 
+  \end{itemize}
+  \item No general probabilistic poly-time algorithm is known for deciding if two graphs are isomorphic
+  \item \textbf{Theorem} \autoref{prot:graph-isomorph-zero} is a Zero-Knowledge protocol for the Graph Isomorphism Problem
+  \begin{proof} 
+    It is first shown that it is a proof system \smallskip \\
+    Completeness is trivial. If $\pi(G_0) = G_1$ and $\psi(G_0) = H$, then it trivially follows that $V$'s check will be satisfied for both values of $b$ \\
+    Soundness can be argued as follows: 
+    \begin{itemize}
+    	\item We should show that we are able to prove something assuming that the prover's claim is wrong i.e. $G_0$ is not isomorphic to $G_1$ in this case
+      \item Assume that in one of the $n$ iterations $P$ can answer both values of $b$ with a permutation that satisfies $V$'s check
+      \item Let $\psi_0$, $\psi_1$ be permutations send in reponse to $b=0,1$ 
+      \item Since $V$'s checks are satisfies it must be the case that $\psi_0(H) = G_0$ and $\psi_1(H) = G$
+      \item This means that $G_0$ is isomorphic to $G_1$ under the isomorphism $\psi_1 \psi_0^{-1}$ which is a clear contradiction
+      \item It must thus be the case that in all $n$ iterations, the prover is able to answer at most one of the $2$ possible values of $b$
+      \item The probability of acceptance is at most $2^{-n}$ which is negligible in $n$
+    \end{itemize}
+    The protocol is shown to be perfect zero-knowledge using the following algorithm for a simulator $M$:
+    \begin{enumerate}
+    	\item Start the machine $V^*$ i.e. give it inputs $G_0, G_1$ and possibly some auxiliary input $\delta$ and random input bits for $V^*$
+      \item To simulate one iteration, execute the following loop:
+      \begin{enumerate}
+      	\item Choose a bit $c$ and a permutation $\psi$ at random. Set $H=\psi^{-1}(G_c)$ and send $H$ to $V^*$ 
+        \item Get $b$ from $V^*$. If $b=c$, output $H,b,\psi$ and exit the loop. Else, reset $V^*$ to its state just before the last $H$ was chosen, and go to step 2a
+      \end{enumerate}
+      If the simulation of all $n$ iterations have been completed stop, else start at Step 2a again
+    \end{enumerate}
+    To show that this simulator works two things needs to be shown: $M$ runs in expected polynomial time, and the distribution output by $M$ is exactly the same as in the real protocol run. \\
+    It is first shown that $M$ runs in expected polynomial time:
+    \begin{itemize}
+    	\item By definition of zero-knowledge the correctness of a simulation is proved assuming that $P$'s claim is true here it means that $G_0$ is isomorphic to $G_1$
+      \item Let $S$ be the set of all graphs isomorphic to $G_0$ (or $G_1$)
+      \item The distribution generated in the simulation is thus the same as in the real protocol (uniform of $S$) and is in particular independent of $c$
+      \item Thus it follows that the $b$ chosen by $V^*$ must also be independent of $c$ i.e. $\text{P}(c=b) = \frac12$
+      \item Thus the expected number of times a loop is done to simulate one iteration is $2$ and thus the whole simulation takes expected $2n$ times the time to go through the loop once which is polynomial in $n$
+    \end{itemize}
+    Then the output distribution is shown to be the same as in the real case  
+    \begin{itemize}
+    	\item The simulator produces in every iteration a triple $(H,c,\psi)$, and the $V^*$ outputs $b$ having seen $H$
+      \item $H$ has the same distribution as in the real case as it is uniform over $S$ 
+      \item It follows that $b$ sent by $V^*$ is also distributed as in the real conversation since $V^*$ chooses $b$ based only on its input and $H$
+      \item Since $H$ and $c$ the choice of whether to keep $H$ is does not depend on the choice of $H$ 
+      \item Therefore the pair $(H,b)$ are distributed as in the real protocol
+      \item $\psi$ is just a random permutation mapping $H$ to $G_b$ as in the real case
+      \item Thus the distribution of $M$ matches the real protocol exactly
+    \end{itemize}
+  \end{proof}
+\end{itemize}
+
+\subsection{Rewinding lemma}
+\begin{itemize}
+  \item If a proof system $(P,V)$ for language $L$ is given and there exists a probabilistic poly-time machine $M_{L}$ with the property that $(P,V) \sim^p M$ on input $x \in L$.then $M$ is called a perfect \textbf{honest-verifier simulator}
+  \item \textbf{Lemma 3.1} The rewinding lemma: Let $(P,V)$ be a proof system for language $L$, and let $M$ be a perfect honest-verifier simulator for $(P,V)$. Assume that conversation have the form $(a,b,z)$, where $P$ sends $a$, $V$ responds with a random bit $b$ and $P$ replies with $z$. Then $(P,V)$ is perfect zero-knowledge	
+  \begin{proof} 
+    Since there exists a honest-verifier simulator $M$ it is the case that $(P,V) \sim^p M$ on input $x \in L$ and honest verifier $V$ and thus it must be the case that the distribution of $(a,b,z)$ is the same for the proof system $(P,V)$ and for the simulator $M$. \smallskip \\
+    To prove the lema a new simulator $M_{V^*}$ is created where it is the case that $(P,V^*) \sim^p M_{V^*}$ for any verifier $V^*$ as follows
+    \begin{enumerate}
+      \item Initialize $M$ and $V^*$
+      \item To simulate one iteration the following loop is executed 
+      \begin{enumerate}
+        \item Simulate an iteration using $M$ as $(a,b,z)$ 
+        \item Send $a$ to $V^*$
+        \item Get $b'$ from $V^*$ if $b=b'$ then output $(a,b,z)$ else reset $V^*$ and go to step 2(a)
+      \end{enumerate}
+    \end{enumerate}
+    To show that this is zero knowledge we first show that the simulator runs in expected polynomial time: 
+    \begin{itemize}
+    	\item Since $b$ is chosen at random and is clearly independent of $b'$, the probability that $b=b'$ is $1/2$
+       \item The loop terminates with probability $1/2$ and therefore the expected number of times the loop runs is $2$. Which implies that the simulator uses expected $2n$ steps which is expected polynomial time.
+    \end{itemize}
+    Then perfect zero-knowledge is proven i.e. the output distributions are the same
+    \begin{itemize}
+      \item $a$ is distributed as in the real case since it does not depend $b$
+      \item The distribution of $b$ must be the same as in the real case, since this only depends on $a$ and the verifies arbitrary input
+      \item $z$ only depends on $a$ and $b$ to be a correct challenge it follows that $z$ is also distributed as in the real case. 
+    \end{itemize}
+  \end{proof}
+\end{itemize}
+
+\newpage
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "cpt-noter"
+%%% End:

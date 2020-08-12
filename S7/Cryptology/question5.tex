@@ -1,0 +1,194 @@
+\section{Symmetric (secret-key) Authentication and Hash Functions}
+\begin{itemize}
+  \item The authentication systems are used to make sure that the received message is what the sender intended
+  \begin{itemize}
+  	\item The Adversary can only change the message
+  	\item Adversary can both change the message and authenticator
+  \end{itemize}
+\end{itemize}
+
+\subsection{Hash Functions}
+\begin{itemize}
+  \item A hash function is defined by a \textbf{generator} $\mathcal H$, which on input a security parameter $k$ outputs the description of a function $h : \{0,1\}^* \to \{0,1\}^k$
+  \item \textbf{Definition 10.1} The game where one runs $\mathcal H$ on input $k$ to get function $h$. If $A$ is given to adversary algorithm $A$ who outputs 2 strings $m,m'$ $A$ has success if $m \neq m'$ and $h(m) = h(m')$ $\mathcal H$ is collision intractable if any polynomial time $A$ has success with negligible probability as a function of $k$
+  \item Collision-intractable hash functions exist under well-known intractability assumptions
+  \item $\mathcal H$ is defined as follows:
+  \begin{itemize}
+  	\item Choose a prime $\alpha$, $\beta$ of order $q$ in $\mathbb Z_p^*$
+  	\item Define a function $h : Z_q \times Z_q \to Z_p$ as follows $h(m_1, m_2) = \alpha^{m_1} \beta^{m_2} \text{ mod } p$
+  	\item This is a discrete log hard problem in $\mathbb Z_p^*$ and this family of functions is collision intractable
+  \end{itemize}
+  \item \textbf{Lemma 10.2} Given function $h : \{0,1\}^{k+1} \to \{0,1\}^k$, and assume a algorithm $A$ are given running in time $t$ that, when given $h(m)$ for uniform $m$. return a preimage of $h(m)$ with probability $\epsilon$. Then a collision for $h$ can be found in time $t$ plus one evaluation of $h$ and with probability at least $\epsilon/4$
+  \item \textbf{Theorem 10.3} If there exists a collision-intractable has function generator $\mathcal H'$ producing functions with finite input length $m >k$, then there exists a collision-intractable generator $\mathcal H$ that produces functions taking arbitrary length input. \smallskip \\
+  \textbf{Proof} \\
+  The case where $m-k > 1$ 
+  \begin{itemize}
+    \item Set $v = m-k-1$ and note that $v> 0$ 
+    \item Now the generator $\mathcal H$ is defined
+    \item $H'$ is used to get function $f: \{0,1\}^m \mapsto \{0,1\}^k$ 
+    \item The new function $h: \{0,1\}^* \mapsto \{0,1\}^k$ as follows 
+    \begin{itemize}
+    	\item Split the input string $x$ in $v$ bit blocks $x_1, \dots, x_n$ padding the last block with $0$s if needed
+      \item Add a block $x_{n+1}$ containing in binary notation the number of $0$s used in padding $x_n$
+      \item Define a series of $m$ bit blocks $z_1, z_2, \dots, z_{n+1}$ as follows set 
+      \[
+        z_1 = 0^k \mid \mid 1 \mid \mid x_1
+      \]
+      and for $i=2,\dots,n+1$ set
+      \[
+        z_i = f(z_{i-1}) \mid \mid 0 \mid \mid x_i
+      \]
+      define $h(x) = f(z_{n+1})$
+      \item The single bit fields in the middle is used for distinguishing the starting state from all intermediate states
+    \end{itemize}
+    \item $h$ is shown to be collision intractable by contradiction i.e. if one can find a collision for $h$ one can efficiently find one for $f$
+    \begin{itemize}
+      \item Assume that we are given $x \neq x'$ where $h(x) = h(x')$
+      \item Let $z_1, \dots, z_{n+1}$ and $z_1',\dots, z_{n'+1}'$ be the sequence of inputs to $f$ as defined when processing $x$ and $x'$ in $h$ 
+      \item Assume without loss of generality that $n \geq n'$ 
+      \item By assumption it is known that $f(z_{n+1}) = h(x) = h(x') = f(z_{n+1}')$
+      \item There are two cases either
+      \begin{itemize}
+      	\item $z_{n+1} \neq z'_{n'+1}$ which gives a collision for $f$ 
+        \item Or $z_{n+1} = z'_{n'+1}$ which implies that the number of $0$'s used for padding $x_n$ and $x'_{n'}$ are equal and $f(x_{n-1}) = f(x'_{n' -1 })$ 
+      \end{itemize}
+      This argument can be repeated and this claim must lead to a collision for $f$
+      \item If this did not lead to a collision then the inputs to $f$ are equal and one would eventually reach a stage where one could conclude $z_{n-n'+1} = z'_1$ at this point one would also have
+      \[
+        x_{n+1} = x'_{n'+1}, x_{n} = x'_{n'}, \dots, x_{n-n'+1} = x_1'
+      \]
+      this cannot if $n = n'$ since this would imply $x = x'$ which would be false by assumption and if $n > n'$ then it cannot be the case that $z_{n-n'+1} = z_1 '$ because then $z_{n-n' +1}$ has a $0$ in position $k+1$ while $z_1'$ has a $1$
+    \end{itemize}
+  \end{itemize}
+  The case where $m-k = 1$ 
+  \begin{itemize}
+  	\item A function $\overline{h}$ is constructed from $f$ 
+    \begin{itemize}
+      \item Define $z_1 = 0^k \mid \mid x_1$ where $x_1$ is the first bit of $x$
+      \item Then for $i = 2,\dots,n+1$ set
+      \[
+        z_1 = f(z_{i-1}) \mid \mid x_i
+      \]
+      \item Define $\overline{h}(x) = f(z_{n+1})$
+    \end{itemize}
+    \item The function $\overline{h}$ will be modified to get the actual hash function $h$ 
+    \item The only time $\overline{h}$ produces a collision where $f$ does not produce a collision is when $x'$ is a suffix of $x$ where $n > n'$ 
+    \item Define $h(x) = \overline{h}(E(x))$ where $E()$ is a suffix-free encoding 
+    \begin{itemize}
+    	\item A suffix-free encoding is an with the property that there exist no pair $x,xø$ such that $E(x')$ is a suffix of $E(x)$
+      \item It is clear that a collision for $h$ implies a collision for $f$ 
+    \end{itemize}
+    \item A suffix-free encoding can be constructed by defining $D()$ as the function which repeats every bit twice
+    \[
+      D(x_1, \dots, x_n) = x_1x_1 \dots x_nx_n
+    \]
+    let $E(x) = 01 \mid \mid D(x)$
+  \end{itemize}
+  \item \textbf{Theorem 10.4} Given function $h$, and assume that it is possible to sample input values to $h$ causing the outputs to be uniformly random in $\{0,1\}^k$. Then a collision for $h$ can be found with constant probability in time corresponding to $2^{k/2}$
+\end{itemize}
+
+\subsubsection{The random oracle model}
+\begin{itemize}
+  \item In the Random Oracle Model the idea is formalized that the output values "might as well" be random
+  \begin{itemize}
+  	\item The idea is that the hash function is replaced with a random oracle
+  	\item A \textbf{random oracle} is a oracle that will receive any string $m$ as input and will return a randomly chosen $R(m)$
+    \begin{itemize}
+  		\item If it later receives the $m$ as input, the same string $R(m)$ will be returned
+    \end{itemize}
+  	\item Every time a new string $m'$ is given as input a fresh random string $R(m')$ is returned chosen independently
+  	\item Every including the adversary has acces to such an oracle and it is the same oracle for everyone
+  \end{itemize}
+  \item In the real life one does not have access to some random oracle but one can hope that the adversary can only do as good as in the random oracle case
+  \item If an application of an hash function has been proven secure in the random oracle model, this means that for the real life application is that any attack that considers the has function $h$ as a "random black-box" and does not use any special properties of $h$ is doomed to failure
+\end{itemize}
+
+\subsection{MACs}
+\subsubsection{Definition}
+\begin{itemize}
+  \item A \textbf{secret-key authentication system} consists of three probabilistic algorithms $(G,A,V)$
+  \begin{itemize}
+  	\item $G$ which outputs a key $K$
+    \begin{itemize}
+  		\item One usually works by simply choosing $K$ as a random bit string of a certain length
+    \end{itemize}
+  	\item $A$ gets input a message $m$ and the key $K$ and outputs an authenticator value $s = A_K(m)$
+  	\item $V$ gets as input an input $s$, a message $m$ and key $K$ and outputs $V_K(s,m)$ which is equal to \textit{accept} or \textit{reject} 
+    \begin{itemize}
+  		\item It is required that the following always hold $V_K(A_K(m),m) = accept$
+    \end{itemize}
+  \end{itemize}
+
+  \item A secret-key authentication system is called a MAC scheme
+  \begin{itemize}
+  	\item MAC stands for message authentication codes (MACs)
+  	\item MAC is also the name for the authenticator value $s$
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Security}
+\begin{itemize}
+  \item \textbf{Definition 10.5 (CMA Security of MACs)} A MAC scheme is $(t,q,\epsilon, \mu)$ CMA-secure if any adversary that runs in time at most $t$ and asks at most $q$ queries, on messages of total length $\mu$ bits, wins the following game with probability at most $\epsilon$
+  \begin{itemize}
+  	\item Given some system $(G,A,V)$, the adversary $E$ gets access to an oracle
+    \begin{itemize}
+  		\item Which initially runs $G$ to get $K$
+    \end{itemize}
+  	\item $E$ may as many times as it wants send some message $m$ to the oracle who will return to $E$ the MAC $A_K(m)$
+    \begin{itemize}
+  		\item i.e. $E$ gets to do a chosen message attack (CMA)
+    \end{itemize}
+  	\item At the end of the game, $E$ outputs a message $m_0$ and an authenticator $s_0$
+  	\item $E$ wins the game if $m_0$ is not one of the message the oracle was asked to authenticate and $V_K(a_0,m_0) = accept$
+  \end{itemize}
+\end{itemize}
+
+\subsection{MACs from block ciphers}
+\begin{itemize}
+  \item The most well-known scheme for MAC's is called CBC-MAC and is based on block ciphers
+  \begin{itemize}
+  	\item Given a block cipher system one encrypts the input mesage in CBC mode using $IV = 0$ and define the MAC to be the final block of the ciphertext
+  	\item Therefore the MAC has fixed length no matter how long the message is
+  \end{itemize}
+
+  \item EMAC is the following scheme which solves the problem of blocks having to be divisible by $k$
+  \begin{itemize}
+  	\item Define a new MAC scheme using 2 keys $K_1$, $K_2$
+  	\item Compute the CBC-MAC on the message using $K_1$
+  	\item This MAC is encrypted under $K_2$ and the output is the result of this
+  	\item It is formally defined as
+  \end{itemize}
+  \begin{equation}
+    E M A C_{K_{1}, K_{2}}(m)=E_{K_{2}}\left(C B C-M A C_{K_{1}}(m)\right)
+  \end{equation}
+
+  \item \textbf{Theorem 10.6} Suppose the block cipher $(G,E,D)$ is a $(t',q',\epsilon')$ secure PRF and has block length $k$. Then EMAC based on this block-cipher is a $(t,q,\epsilon, \mu)$ CMA-secure MAC scheme, where
+  \begin{equation}
+    t \leq t^{\prime}, \quad \mu / k \leq q^{\prime}, \quad \epsilon=2 \epsilon^{\prime}+\frac{2(\mu / k)^{2}+1}{2^{k}}
+  \end{equation}
+\end{itemize}
+
+\subsection{MACs from hash functions}
+\begin{itemize}
+  \item HMAC is a MAC scheme based on any collision intractable hash function
+
+  \item The following is a HMAC based on SHA-1
+  \begin{itemize}
+  	\item The key is a random 512-bit string $K$
+  	\item The scheme uses two 512 bit constant $ipad = 3636 \dots 36$, $opad = 5C5C \dots 5C$ in HEX notation
+  	\item The function is defined as follows:
+    \begin{equation}
+      HMAC_{K}(m)=S H A 1((K \oplus opad)\|S H A 1((K \oplus ipad) \| m))
+    \end{equation}
+  \end{itemize}
+  It can be proved secure in the random oracle model
+  \item HMAC is secure if the hash function is collision resistant and if the and if the basic compression function is secure in a weak sense when used as MAC
+
+\end{itemize}
+
+\newpage
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "crypto-noter"
+%%% End:

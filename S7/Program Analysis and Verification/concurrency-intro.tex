@@ -1,0 +1,89 @@
+\subsection{Later and persistent modalities}
+\begin{itemize}
+  \item The $\later$ modality expresses that a property is only supposed to hold later, after a reduction step has taken place
+	\item The set of Iris proportions is not just a set of resources
+  \begin{itemize}
+  	\item An iris proposition $P$ is closer to being a set of pairs $(k,r)$ where $k$ is a natural number and $r$ a reource
+    \item $k$ can be thought of as a step-index i.e. a natural number which expresses for how many reduction steps we know that $r$ is in $P$ 
+    \item If $(k,r) \in P$ and $m \leq k$ then also $(m,r) \in P$ 
+    \item The step-indices are used to interpret $\later$
+    \[
+      \later P=\{(m+1, r) \mid (m, r) \in P\} \cup\{(0, r) \mid r \in \mathcal{R}\}
+    \]
+    \item ``later'' means that the index number is smaller 
+    \begin{itemize}
+    	\item There are fewer reductions steps left after some reduction steps has been taken
+    \end{itemize}
+  \end{itemize}
+  \item The persistent modality $\square$ is defined as follows
+  \[
+    \square P=\left\{r \in \mathcal{R} | \exists s, r^{\prime}, s \in P \wedge s=s \cdot s \wedge r=s \cdot r^{\prime}\right\}
+  \]
+  \begin{itemize}
+  	\item $\square P$ is the upwards-closure of the set of duplicable resources in $P$
+    \item Persistent predicates are those predicates that do not assert exclusive owner, over resources
+    \item It only expresses ``knowledge'' and now exclusive ownership
+    \item Persistent predicates $P$ are duplicable: $P \dashv\vdash P * P$
+  \end{itemize}
+  % TODO persistent rule for moving 
+  \item There are two kinds of primitive persistent propositions 
+  \[
+    t =_\tau t' \dashv \vdash \square (t =_\tau t') \quad \{P\} e \{\Phi\} \dashv \vdash \square \{P\} e \{\Phi\}
+  \]
+  \item The rule \texttt{HT-PERSISTENTLY} can be used to move persistent propositions in and out of preconditions
+  \[
+  \begin{prooftree} 
+    \hypo{\square Q \land S \vdash \{P\}\; e \; \{v.R\}}
+    \infer[double]1{S \vdash \{P \land \square Q\}\; e \; \{v.R\}} 
+  \end{prooftree}
+  \]
+\end{itemize}
+
+\subsection{Proof rules}
+\begin{itemize}
+	\item $e_1 \mid \mid e_2$ runs $e_1$ and $e_2$ is parallel, waits until both finish, and then returns a pair consisting of the values to which $e_1$ and $e_2$ evaluated 
+  \begin{itemize}
+  	\item It is definable using fork
+  \end{itemize}
+  \item The following rule \texttt{HT-PAR}
+  \[
+  \begin{prooftree} 
+    \hypo{S \vdash \{P_1\}e_1 \{v.Q_1\}}
+    \hypo{S \vdash \{P_2\}e_2 \{v.Q_2\}} 
+    \infer2{S \vdash \{P_1 * P_2\} e_1 \mid \mid e_2 \{v. \exists v_1v_2.v = (v_1,v_2) * Q_1[v_1/v] * Q_2[v_2/v]\}} 
+  \end{prooftree}
+  \]
+  states that one can run $e_1$ and $e_2$ in parallel and if they have \textbf{disjoint} footprints and then verify the two components seperately 
+  \begin{itemize}
+    \item It is referred to as the \textbf{disjoint concurrency rule}
+    \item Each thread is reasoned about in isolation (\textbf{thread-local reasoning}) 
+  	\item Important since it is not possible to reason about all possible interleavings of threads since there are too many
+  \end{itemize}
+  % HT-CAS construct and rule 
+  \item The following rule \texttt{HT-CAS}
+  \[
+  \begin{prooftree} 
+    \infer0{\{\later \ell \hookrightarrow v\} \text{cas}(\ell,v_1,v_2)\{u.(u = \true * v = v_1 * \ell \hookrightarrow v_2) \lor (u = \false * v \neq v_1 * \ell \hookrightarrow v)\}} 
+  \end{prooftree}
+  \]
+  is used for the general case of the cas primitive. 
+  \begin{itemize}
+    \item The derived rules \texttt{HT-CAS-SUCC}
+    \[
+    \begin{prooftree} 
+      \infer0{\{\later \ell \hookrightarrow v_1\} \text{cas}(\ell,v_1,v_2)\{u.u = \true * v = v_1 * \ell \hookrightarrow v_2\}} 
+    \end{prooftree}
+    \]
+    and \texttt{HT-CAS-FAIL} 
+    \[
+    \begin{prooftree} 
+      \infer0{\{\later \ell \hookrightarrow v * \later(v \neq v_1)\} \text{cas}(\ell,v_1,v_2)\{u.u = \false * \ell \hookrightarrow v\}} 
+    \end{prooftree}
+    \]
+    are often easier to use
+  \end{itemize}
+\end{itemize}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "pav-noter"
+%%% End:

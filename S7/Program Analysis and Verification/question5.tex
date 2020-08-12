@@ -1,0 +1,138 @@
+\section{Pointer Analysis}
+\subsection{Allocation-Site Abstraction}
+\begin{itemize}
+  \item \textbf{Allocation-site abstraction} is a common choice for representing the set of possible memory cells that the pointers may point to, which is to introduce
+  \begin{itemize}
+  	\item An abstraction cell $X$ for program variable $X$
+  	\item An abstraction cell \texttt{alloc-i} for where $i$ is a unique index for each occurrence of an $\mathtt{alloc}$ operation
+  	\item Each abstract cell represents the set of cells at runtime that are allocated to the same source location
+  	\item Cells is used to denote the set of abstract cells for the given program
+  	\item Locs is used to denote the set of abstract location of the cells which is written as $\& c \in \text{Locs}$ for every $c \in \text{Cells}$ 
+  \end{itemize}
+	
+\end{itemize}
+
+\subsection{Andersen's Algorithm}
+\begin{itemize}
+  \item It is an approach to points-to analysis
+  \item For each cell $c$ constraint variable $\co{c}$ is introduced ranging over sets of locations
+  \item Uses the cubic algorithm to compute a solution
+  \item The analysis assumes that the program has been normalized so that every pointer operation is one of these six kinds
+  \begin{itemize}
+  	\item $X = \mathtt{alloc}~P$ where $P$ is $\mathtt{null}$ or an integer constant
+  	\item $X_1 = \& X_2$
+  	\item $X_1 = X_2$
+  	\item $X_1 = * X_2$
+  	\item $*X_1 = X_2$
+  	\item $X = \mathtt{null}$
+  \end{itemize}
+  \item The following constraints are generated for each of these pointer operations
+  \begin{align*} 
+    X = \mathtt{alloc} \ P &: \quad  \& \mathtt{alloc-i} \in \co{X} \\
+    X_1 = \&X_2 &: \quad  \& X_2 \in \co{X_1} \\
+    X_1 = X_2 &: \quad \co{X_2} \subseteq \co{X_1} \\
+    X_1 = *X_2 &: \quad \&\alpha \in \co{X_2} \Rightarrow \co{\alpha} \subseteq \co{X_1} \\
+    *X_1 = X_2 &: \quad \& \alpha \in \co{X_1} \Rightarrow \co{X_2} \subseteq \co{\alpha}
+  \end{align*}
+  \item The resulting points to function is defined as:
+  \begin{equation*}
+    \mathtt{pt}(p) = \co{p}
+  \end{equation*}	
+\end{itemize}
+
+\subsection{Steensgaard's Algorithm}
+\begin{itemize}
+  \item It is an approach to points-to analysis
+  \item It is a coarsers analysis which can be expressed using term unification
+  \item A term variable $\co{c}$ is used for every cell $c$
+  \item A term constructor $\& t$ is used to represent a pointer to $t$
+  \item Each $\alpha$ denotes a fresh term variable
+  \item Term constructors satisfy the general term equality axiom:
+  \begin{equation*}
+    \& \alpha_1 = \& \alpha_2 \Rightarrow \alpha_1 = \alpha_2
+  \end{equation*}
+  \item The following constraints are generated for each of these pointer operations
+  \begin{align*} 
+    X = \mathtt{alloc} \ P &: \quad  \co{X} = \& \mathtt{alloc-i}\\
+    X_1 = \&X_2 &: \quad \co{X_1} = \& \co{\& X_2} \\
+    X_1 = X_2 &: \quad \co{X_2} = \co{X_1} \\
+    X_1 = *X_2 &: \quad \co{X_2} = \&\alpha \land \subseteq \co{X_1} = \alpha \\
+    *X_1 = X_2 &: \quad \co{X_1} = \&\alpha \land \subseteq \co{X_2} = \alpha
+  \end{align*}
+  \item The resulting points to function is defined as:
+  \begin{equation*}
+    \mathtt{pt}(p) = \left\{t \in Cells \mid \co{p} = \co{t}\right\}
+  \end{equation*}	
+\end{itemize}
+
+\subsection{Interprocedural Points-To Analysis}
+\begin{itemize}
+  \item CFG and points-to analysis may depend on each other and therefore one should perform the two simultaneously
+  \item All function calls should be normalized to the form
+  \begin{equation*}
+    X = X'(X_1, \dots, X_n)
+  \end{equation*} 
+  i.e. all involved expressions are variables and all return expression are assumed to be just variables
+  \item Andersen's algorithm are very similar to cfg analysis and therefore it can be extended with the appropriate constraints
+  \begin{itemize}
+    \item A reference to a constant function $f$ generates the constraint
+    \begin{equation*}
+     f \in \co{f} 
+    \end{equation*} 
+    \item The computed function call generates the constraint
+    \begin{equation*}
+      f \in \co{X'} \Rightarrow (\co{X_1} \subseteq \co{X_1'} \land \cdots \land \co{X_n} \subseteq \co{X_n'} \land \co{X''} \subseteq \co{X})
+    \end{equation*}
+    for every occurrence of a function with $n$ parameters
+    \begin{equation*}
+      f(X_1', \dots, X_n) \{\dots \mathtt{return} \; X''; \}
+    \end{equation*}
+  \end{itemize}
+\end{itemize}
+
+\subsection{Flow-Sensitive Points-to Analysis}
+\begin{itemize}
+  \item It can e.g. be used to discover interesting heap structures
+  \item A lattice of \textbf{point-to graphs} is used
+  \begin{itemize}
+  	\item It is directed graphs in which the nodes are the abstract cells of for the given graph and the edges correspond to possible pointers
+  	\item They are ordered by inclusion of their sets to edges
+  	\item $\bot$ is the graph without edges and $\top$ is the fully connected graph
+  	\item i.e. the lattice for abstract states is 
+  \end{itemize}
+  \begin{equation*}
+    States = 2^{Cells \times Cells}
+  \end{equation*}
+  \item For every CFG node $v$ a constraint variable $\co{v}$ is introduced denoting a point-to graph that describes all possible stores at that program point
+  \item Constraints:
+  \begin{align*}
+    X = \mathtt{alloc} \; P &: \quad \co{v} = \text{JOIN}(v) \downarrow X \cup \{(X, \text{\texttt{alloc-i}})\} \\
+    X_1 = \& X_2 &: \quad \co{v} = \text{JOIN}(v) \downarrow X_1 \cup \{(X_1, X_2)\} \\
+    X_1 = X_2 &: \quad \co{v} = \text{assign}(\text{JOIN}(v), X_1, X_2)\\
+    X_1 = *X_2 &: \quad \co{v} = \text{load}(\text{JOIN}(v), X_1, X_2)\\
+    *X_1 = X_2 &: \quad \co{v} = \text{store}(\text{JOIN}(v), X_1, X_2)\\
+    X = \text{null} &: \quad \co{v} = \text{JOIN}(v)\downarrow X
+  \end{align*}
+  and for all other nodes:
+  \begin{align*}
+    \co{v} = \text{JOIN}(V)
+  \end{align*}
+  where
+  \begin{align*}
+                 \text{JOIN}(v) &= \cup_{w \in \text{pred}(v)} \co{w} \\
+            \sigma \downarrow x &= \{(s,t) \in \sigma \mid s \neq x\} \\
+    \text{assign}(\sigma, x, y) &= \sigma \downarrow x \cup \{(x,t) \mid (y,t) \in \sigma \}\\
+      \text{load}(\sigma, x, y) &= \sigma \downarrow x \cup \{(x,t) \mid (y,s) \in \sigma, (s,t) \in \sigma \}\\
+      \text{store}(\sigma, x, y) &= \sigma \cup \{(s,t) \mid (x,s) \in \sigma, (y,t) \in \sigma \}
+  \end{align*}
+  \item The analysis also computes a flow sensitive points-to map that for each program point $v$ is defined by
+  \begin{equation*}
+    pt(p) = \{t \mid (p,t) \in \co{v}\}
+  \end{equation*}
+\end{itemize}
+  
+\newpage
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "pav-noter"
+%%% End:

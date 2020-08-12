@@ -1,0 +1,12 @@
+\babel@toc {english}{}
+\contentsline {section}{\numberline {1}Hashing and Membership}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Invertible Bloom Lookup Table}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Operations}{3}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Streaming and Dimensionality Reduction}{6}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Dimensionality reduction}{6}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}The Johnson-Lindenstrauss Theorem}{6}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Improving Johnson-Lindenstrauss Transform}{7}{subsection.2.3}%
+\contentsline {section}{\numberline {3}Applications of Randomization}{8}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Nearest Neighbor Search Definition}{8}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Algorithm}{8}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Analysis}{9}{subsection.3.3}%

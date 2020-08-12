@@ -1,0 +1,197 @@
+\section{Concurrency: Counter Modules}
+\input{concurrency-intro}
+   
+\subsection{Counter modules and authoritative resource algebra}
+\begin{itemize}
+	\item A situation is considered where several threads operate on shared state
+  \item Each thread has a partial view of the shared state
+  \item There is an invariant governing the shared state
+  \item The invariant keeps track of what the actual state is (authoritative view)
+\end{itemize}
+
+\subsubsection{Requirements}
+\begin{itemize}
+  \item The counter module has three methods
+  \begin{itemize}
+  	\item newCounter for creating a fresh counter 
+    \item incr for increasing the value of the counter
+    \item read for reading the current value of the counter
+  \end{itemize}
+  \item There is an abstract predicate $\text{isCounter}(v,n)$ which states that $v$ is a couter whose value is $n$
+  \begin{itemize}
+  	\item It should be persistent such that it can be shared between threads 
+    \item It canot state that $n$ is exactly the value of the counter but only its lower bound
+  \end{itemize} 
+\end{itemize}
+
+\subsubsection{Implementation}
+\begin{itemize}
+	\item The newCounter method creates the counter which is a location containing the counter value
+  \[
+    \text{newCounter}() = \iref(0)
+  \]
+  \item The incr method increases the value of the counter by 1 (done by a cas loop since $\ell \leftarrow !\ell + 1$ is not an atomic operation)
+  \begin{align*}  
+    \irec \; \text{incr}(\ell) = &\ilet \; n=!\ell \; \iin \\
+                                 &\ilet \; m = n+1 \; \iin \\
+                                 &\iif \; \icas(\ell, n,m) \; \ithen \; () \; \ielse \; \text{incr} \; \ell
+  \end{align*}
+  \item The read method just reads the value
+  \[
+    \text{read} \; \ell = !\ell
+  \]
+\end{itemize}
+
+\subsubsection{Resource algebra requirements}
+\begin{itemize}
+	\item An invariant is used to keep track of the shared state of the module i.e. the value of the counter
+  \item The invariant will have the \textbf{authoritative view} of the value of the counter, a ghost assertion
+  \[
+    \dboxed{\auth m}^\gamma
+  \]
+  this is intuitively the true value of the counter
+  \item Each thread will have a fragmental view of the counter value which is captured by the ghost assertion
+  \[
+    \dboxed{\prt n}^\gamma
+  \]
+  this is intuitively a lower bound of the correct, true, value of the counter
+  \item The abstract predicate is defined as
+  \[
+    \text{isCounter}(\ell, n, \gamma) = \dboxed{\prt n}^\gamma * \exists \iota.\inv{\exists m. \ell \pointsto m * \dboxed{\auth m}^\gamma}^\iota
+  \]
+  which can be used to define the counter specification as follows
+  \begin{align*}
+    &\{\True\} \text{newCounter}() \{u.\exists \gamma.\text{isCounter}(u,0,\gamma)\} \\
+    &\forall \gamma. \forall v. \forall n. \{\text{isCounter}(v,n,\gamma)\} \; \text{read} \; v \; \{u.u \geq n\} \\
+    &\forall \gamma. \forall v. \forall n. \{\text{isCounter}(v,n,\gamma)\} \; \text{incr} \; v \; \{u.u = () * \text{isCounter}(v, n+1, \gamma)\}
+  \end{align*}
+
+  \item The requirements for the resource algebra is
+  \begin{enumerate}
+    \item A fragmental view should be duplicable i.e.
+    \[
+      | \prt n | = \prt n \\
+    \]
+    \item The fragmental view is the lower bound of the true value 
+    \[
+      \auth m \cdot \prt n \in \mathcal V \Rightarrow m \geq n
+    \]  
+    \item If one both owns the authoritative view and a fragmental view, then we may update them
+    \[
+      \auth m \cdot \prt n \leadsto \auth (m + 1) \cdot \prt (n + 1)
+    \]
+  \end{enumerate}
+\end{itemize}
+
+\subsubsection{Resource algebra definition}
+\begin{itemize}
+	\item Carrier: $\mathcal M = \mathbb N_{\bot, \top} \times \mathbb N$ where $\mathbb N_{\bot, \top}$ is the natural numbers with two additional element $\bot$ and $\top$ 
+  \item For $m,n \in \mathbb N$, write $\auth m$ for $(m,0)$ and $\prt n$ for $(\bot, n)$
+  \item Operation:
+  \[
+    (x,n) \cdot (y, m) = 
+    \begin{cases} 
+      (y, \max(n,m))    & \text{if } x = \bot \\ 
+      (x, \max(n,m))    & \text{if } y = \bot \\ 
+      (\top, \max(n,m)) & \text{otherwise}
+    \end{cases}
+  \]
+  \item The unit is $(\bot, 0)$
+  \item The valid set is defined as follows
+  \[
+    \mathcal V = \{(x,n) \mid x = \bot \lor x \in \N \land x \geq n\}
+  \]
+  \item The core is defined as
+  \[
+    |(x,n)| = (\bot, n)
+  \]
+  \item $(\mathcal M, \mathcal V, |\cdot |)$ is a unital resource algebra
+  \item $\auth m \cdot \prt n \leadsto \auth (m+1) \cdot \prt (n+1)$
+\end{itemize}
+
+\subsubsection{A More General Authoritative Resource Algebra}
+\begin{itemize}
+  \item Given a unital resource algebra $(\mathcal M, \epsilon, \mathcal V, | \cdot |)$ let $\text{AUTH}(\mathcal M)$ be the following resource algebra
+  \begin{itemize}
+    \item Carrier $\mathcal M_{\bot, \top} \times \mathcal M$ 
+    \item The operation 
+    \[
+      (x, a) \cdot (y, b) = 
+      \begin{cases} 
+        (y, a \cdot b) & \text{if } x = \bot \\
+        (x, a \cdot b) & \text{if } y = \bot \\
+        (\top, a \cdot b) & \text{otherwise}
+      \end{cases}
+    \]
+    \item The core is defined as 
+    \[
+      \mathcal V_{\text{AUTH}(\mathcal M)} \left\{(x, a) \mid x = \bot \land a \in \mathcal V \lor x \in \mathcal M \land x \in \mathcal V \land a \preccurlyeq x \right\}
+    \]
+  \end{itemize}
+  \item Properties of $\text{AUTH}(\mathcal M)$
+  \begin{itemize}
+    \item \texttt{AUTH}$(\mathcal M)$ is unital with unit $(\bot, \epsilon)$ where $\epsilon$ is the unit of $\mathcal M$ \smallskip \\
+    \textbf{Proof} it is first seen that \texttt{AUTH}$(\mathcal M)$ is commutative. This follows from the way the operation is specified. The operation on the first element is clearly commutative since it is just the identity function on the element which is not $\bot$ if this element does exists. The second part of the element relies on the $\mathcal M$ being commutative which it is. \bigskip \\
+Then it is seen that the unit is $(\bot, \epsilon)$ since for another element $(x,y)$ from the carrier the following holds
+    \begin{equation*}
+      (\bot, \epsilon) \cdot (x,y) = (x, \epsilon \cdot y) = (x,y)
+    \end{equation*}
+    Then since \texttt{AUTH}($\mathcal M$) is commutative it must also hold that $(\bot, \epsilon) \cdot (x,y) = (x,y)$ and therefore it must be the unit element. It is clear that $(\bot, \epsilon) \in \mathcal \mathcal V_{\mathtt{AUTH}(\mathcal M)}$ since the first part is $\bot$. The property $|(\bot, \epsilon)| = (\bot, \epsilon)$ holds since
+   \begin{equation*}
+     |(\bot, \epsilon)| = (\bot, |\epsilon|) = (\bot, \epsilon)
+   \end{equation*}
+  Thereby \texttt{AUTH}$(\mathcal M)$ must be unital, since all properties hold.
+  \item $\bullet x \cdot \bullet y \notin \mathcal V_{\mathtt{AUTH}(\mathcal M)}$ \smallskip \\
+  \textbf{Proof} It follows since the first part of both elements is not $\bot$ therefore the resulting element of the operation is one the form $(\top, y)$ which is not valid. Since the first part should either be an element in $\mathcal M$ or the element $\bot$ for the whole element to be valid.
+  \item $\cdot \circ x \cdot \circ y=\circ(x \cdot y)$ \smallskip \\
+  \textbf{Proof}
+  \begin{align*}
+    \circ x \cdot \circ y = (\bot, x) \cdot (\bot, y) = (\bot, x \cdot y) = \circ(x \cdot y)
+  \end{align*}
+  \item $\bullet x \cdot \circ y \in \mathcal{V} \Rightarrow y \preccurlyeq x$ \smallskip \\
+  \textbf{Proof}
+  \begin{align*}
+     \bullet x \cdot \circ y \in \mathcal{V} &\Rightarrow (x,y) \in \mathcal V \text{ for } x \neq \bot \\
+                                             &\Rightarrow (x,y) \in \{(x,a) \mid x = \bot \land a \in \mathcal V \lor x \in \mathcal M \land x \in \mathcal V \land a \curlyeqprec x\} \text{ for } x \neq \bot \\
+                                             &\Rightarrow x = \bot \land a \in \mathcal V \lor x \in \mathcal M \land x \in \mathcal V \land a \curlyeqprec x \text{ for } x \neq \bot \\
+                                             &\Rightarrow  x \in \mathcal M \land x \in \mathcal V \land a \curlyeqprec x \Rightarrow a \curlyeqprec x \
+  \end{align*}
+  \item If $x \cdot z$ is valid in $\mathcal M$ then
+  \[
+    \bullet x \cdot \circ y \leadsto \bullet(x \cdot z) \cdot \circ(y \cdot z)
+  \]
+  in \texttt{AUTH}$(\mathcal M)$ \smallskip \\
+  \textbf{Proof} It follows from part 4 since if $\bullet x \cdot \circ y$ is valid if and only if $\bullet(x \cdot z) \cdot \circ(y \cdot z) = (x \cdot z, y \cdot z)$ since they are only invalid if it is not the case that $y \preccurlyeq x$. Since the differences between the two elements are the same it is impossible to find a element $(a,b)$ where $y \cdot b \preccurlyeq x \cdot a$ and where $y \cdot z \cdot b \preccurlyeq x \cdot z \cdot a$ does not hold.
+  \item If $x \cdot z$ is valid in $\mathcal{M}$ and $w \preccurlyeq z$ then
+  \[
+    \bullet x \cdot \circ y \leadsto \bullet(x \cdot z) \cdot \circ(y \cdot w)
+  \]
+  in \texttt{AUTH}$(\mathcal M)$ \smallskip \\
+  \textbf{Proof} It follows from part 4 since if $\bullet x \cdot \circ y$ is valid if and only if $\bullet(x \cdot z) \cdot \circ(y \cdot z) = (x \cdot z, y \cdot w)$ since they are only invalid if it is not the case that $y \preccurlyeq x$. Since the difference between the first elements are bigger than for the second element it is impossible to find a element $(a,b)$ where $y \cdot b \preccurlyeq x \cdot a$ and where $y \cdot z \cdot b \preccurlyeq x \cdot z \cdot a$ does not hold.
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{A More Precise Specification}
+\begin{itemize}
+	\item To get a more precise specification a fraction $q$ is added to the abstract isCounter predicate
+  \begin{itemize}
+  	\item The intuition is that if a thread has owner ship of $\text{isCounter}(\ell, n \gamma, q)$ then the contribution of this thread to the actual counter value is $n$ and if $q=1$ then the thread is the sole owner, otherwise $(q < 1)$ then one have fragmental ownership
+  \end{itemize}
+  \item Using this one can get the following specification more precise definition
+  \begin{align*}
+    &\{\True\} \; \text{newCounter}() \{u. \exists \gamma. \text{isCounter}(u,0,\gamma,1)\} \\
+    &\forall p. \forall \gamma. \forall v. \forall n. \{\text{isCounter}(v,n,\gamma, p)\} \; \text{read} \; v \; \{u.u \geq n\} \\
+    &\forall \gamma. \forall v. \forall n. \{\text{isCounter}(v,n,\gamma, p)\} \; \text{read} \; v \; \{u.u = n\} \\
+    &\forall p. \forall \gamma. \forall v. \forall n. \{\text{isCounter}(v,n,\gamma, p)\} \; \text{incr} \; v \; \{u.u = () * \text{isCounter}(v,n+1,\gamma,p)\}
+  \end{align*}
+  \item isCounter is not instead we have the following
+  \[
+    \text{isCounter}(\ell, n+k, \gamma, p + q) \dashv \vdash \text{isCounter}(\ell, n, \gamma, p) * \text{isCounter}(\ell, k, \gamma, q)
+  \]
+\end{itemize}
+
+\newpage
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "pav-noter"
+%%% End:

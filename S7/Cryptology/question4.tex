@@ -1,0 +1,233 @@
+\section{Public-key Crypto based on Discrete Log and LWE}
+\input{public-key-definition}
+
+\subsection{Computational problems}
+\begin{itemize}
+  \item \textbf{The discrete log (DL) problem} Given a group $G$, generator $\alpha$ and $\beta \in G$ find an integer such that $\alpha^a = \beta$
+	\item It is in many groups hard e.g. $\mathbb Z_p^*$
+  \item \textbf{The Diffie-Hellman (DH) problem} Given a group $G$, generator $\alpha$, and $\alpha^a$, $\alpha^b$ where $a,b$ are randomly and independently chosen from $Z_t$ compute $\alpha^{ab}$
+  \item \textbf{Lemma 8.1} The DH problem is no harder than the DL problem
+
+  \item \textbf{The Decisional Diffie-Hellman (DDH) problem} Given a group $G$, generator $\alpha$ and $\alpha^a, \alpha^b, \alpha^c$ where $a,b$ are randomly and independently chosen from $Z_t$ guess whether which of the following cases you are in
+  \begin{itemize}
+  	\item $c$ is chosen as $c=ab$
+  	\item $c$ is chosen uniformly at random from $Z_t$
+  \end{itemize}
+  \item \textbf{Lemma 8.2} The DDH problem is no harder than the DH problem
+  \item A \textbf{group generator} /GGen/ is a efficient probabilistic algorithm which takes as input an integer $k$ and outputs a group $G$ and an element $\alpha \in G$ that generates $G$
+  \begin{itemize}
+  	\item $k$ controls the size of the group generated
+  \end{itemize}
+  \item \textbf{Definition 8.3} Consider the following experiment with an algorithm $A$:
+  \begin{itemize}
+  	\item Run \textit{GGen} on input $k$ to get $G$ and $\alpha$
+  	\item Choose $a$ at random in $Z_t$ and give $A$ input $G, \alpha, \alpha^a$
+  	\item The DL problem is said to be hard (with respect to \textit{GGen}) if for any polynomial time in $k$ algorithm $A$, the probability that $A$ outputs $a$ is negligible in $k$
+  \end{itemize}
+  \item \textbf{Definition 8.4} Consider the following experiment with an algorithm $A$:
+  \begin{itemize}
+  	\item Run \textit{GGen} on input $k$ to get $G$ and $\alpha$
+  	\item Choose $a,b$ at random in $Z_t$ and give $A$ input specification of $G, \alpha, \alpha^a, \alpha^b$
+  	\item The DH problem is said to be hard (with respect to \textit{GGen}) if for any polynomial time in $k$ algorithm $A$, the probability that $A$ outputs $\alpha^{ab}$ is negligible in $k$
+  \end{itemize}
+  \item \textbf{Definition 8.5} Consider the following experiment with an algorithm $A$:
+  \begin{itemize}
+  	\item Run \textit{GGen} on input $k$ to get $G$ and $\alpha$
+  	\item Choose $a,b$ at random in $Z_t$
+  	\item One can be in one of the following two cases:
+    \begin{enumerate}[label=\alph*)]
+  		\item In the "real" case, set $c=ab$
+  		\item In the "ideal" case choose $c$ at random from $Z_t$
+    \end{enumerate}
+  	\item Give $A$ input specification of $G,\alpha, \alpha^a, \alpha^b, \alpha^c$.
+  	\item $A$ outputs one bit i.e. a guess at whether one in the real or the ideal case
+  	\item Let $p_{A,0}(k)$ be the probability that $A$ outputs $1$ in the real case
+  	\item Let $p_{A,1}(k)$ be the probability that $A$ outputs $1$ in the real case
+  	\item The advantage of $A$ is defined to be 
+    \begin{equation*}
+      Adv_A(k) = |p_{A,0}(k) - p_{A,1}(k)|  
+    \end{equation*}
+  	\item The DH problem is said to be hard (with respect to \textit{GGen}) if for any polynomial time in $k$ algorithm $A$, $Adv_A(k)$ is negligible in $k$
+  \end{itemize}
+\end{itemize}
+
+\subsection{The El Gamal Cryptosystem}
+\begin{itemize}
+  \item Given to parties $A$ and $B$ that want to exchange a secret given an already agreed (in public) group $G$ and a generator $\alpha$:
+  \begin{enumerate}
+  	\item $A$ chooses $s_A$ at random in $Z_t$ and $B$ chooses $s_B$ at random in $Z_t$
+  	\item $A$ sends $y_A = \alpha^{s_A}$ to $B$ and $B$ sends $y_B = \alpha^{S_B}$ to $A$
+  	\item $A$ computes $y_B^{s_A}$ and $B$ computes $y_A^{S_B}$
+  \end{enumerate}
+
+  \item \textbf{El Gamal cryptosystem (general version)}
+  \begin{itemize}
+  	\item \textbf{Key generation} On input security parameter $k$
+    \begin{itemize}
+  		\item Run \textit{GGen} on input $k$ to obtain specification of a group $G$ and generator $\alpha$
+  		\item Choose $a$ at random from $Z_t$
+  		\item The public key is the specification of $G$ and $\beta = \alpha^a$
+  		\item The secret key is $a$
+  		\item The plaintext space is $G$ and the ciphertext space is $G \times G$
+    \end{itemize}
+  	\item \textbf{Encryption} To encrypt $m \in G$ choose $r$ at random in $Z_t$, the ciphertext is $(\alpha^r, \beta^rm)$
+  	\item \textbf{Decryption} To decrypt ciphertext $(c,d)$ compute $c^{-a}d$
+  \end{itemize}
+
+  \item \textbf{Lemma 8.6} The problem of decrypting an El Gamal ciphertext (without the secret key) is equivalent to solving the DH problem
+
+  \item \textbf{Theorem 8.7} If the DDH problem is hard (w.r.t \textit{GGen)}, then the El Gamal cryptosystem is CPA \smallskip \\
+  \textbf{Proof}
+  \begin{itemize}
+   \item It is assumed for contradiction, that there exists some adversary \texttt{Adv} that plays the CPA security game and has advantage at least $\epsilon$ for the El Gamal cryptosystem
+   \item Using the adversary one can create an algorithm $B$ can distinguish between ``c is random'' and ``c=ab'' with advantage at least $\epsilon$.
+   \item Let $G, \alpha, \alpha^a, \alpha^b, \alpha^c$ be the input to the algorithm $B$.
+   \item Then set the public key to be $\beta = \alpha^a$ and give this to the adversary together with the specification of the group $G$
+   \item When the adversary \texttt{Adv} ask for the encryption of a message $m \in G$ send the ciphertext $(\alpha ^b, \alpha^c m)$. 
+   \begin{itemize}
+     \item If $c=ab$ this would be a correct ciphertext where $r=b$ since
+     \begin{equation*}
+       (\alpha ^b, \alpha^c m) = (\alpha^b, \alpha^{ab}m) = (\alpha^b, \beta^b m) = E_{\beta} (m)
+     \end{equation*} 
+     \item If $c$ was random it was the ciphertext of $r' = \alpha^{c+d-ab}$ for $m = \alpha^{d}$ since 
+     \begin{equation*}
+       (\alpha ^b, \alpha^c m) = (\alpha^b, \alpha^{c}\alpha^d) = (\alpha^b, \alpha^{c+d}) = (\alpha^b, \alpha^{ab}\alpha^{c+d-ab}) = (\alpha^b, \beta^br') = E_{\beta}(r')
+     \end{equation*}
+     Since $c$ is random $r'$ is random since it can be determined from $c$ and the correct answer for the adversary \texttt{Adv} is ideal.
+   \end{itemize}
+   \item When the Adversary \texttt{Adv} outputs ideal output ``c is random'' and if it outputs real output ``c=ab''
+   \item This achieves an advantage of at least $\epsilon$ and if this is not negligible, then DDH is not hard which is a contradiction
+   \item Thereby the El Gamal cryptosystem must be CPA secure for some negligible $\epsilon$
+  \end{itemize}
+\end{itemize}
+
+\subsection{Example groups}
+\subsubsection{$\mathbb Z_p^*$}
+\begin{itemize}
+  \item \textbf{Lemma 8.8} $\alpha \in \mathbb Z_p^*$ is a generator if and only if $\alpha^{(p-1)/q} \neq 1$ for every prime $q$ that divides $p-1$
+  \item To generate a prime $p$ where the factorisation of $p-1$ is known one can do the following
+  \begin{itemize}
+  	\item Choose a random prime $q$ set $p=2q + 1$ and test whether $p$ is a prime
+  	\item If not choose a new $q$
+  	\item When this succeeds the factor of $p-1$ is known i.e. $2$ and $q$
+  	\item It is expected to generate $O(k)$ values of $q$ before $p$ happens to be prime
+  	\item A prime $p$ generated in this way is sometimes called a safe prime
+  \end{itemize}
+
+  \item If $G= \mathbb Z_p^*$ in El Gamal one will never get a CPA-secure cryptosystem
+
+  \item \textbf{Lemma 8.9} Let $\alpha$ be a generator of $\mathbb Z^*_p$. Then $(\alpha^i)^{(p-1)/2} \text{ mod } p = 1$ if and only if $i$ is even and is $-1$ otherwise
+
+  \item \textbf{Lemma 8.10} In the group $\mathbb Z_p^*$, the DDH problem is not hard \smallskip \\
+  \textbf{Proof}
+  \begin{itemize}
+  	\item The adversary is given $\alpha, \alpha^a, \alpha^b, \alpha^c$ 
+    \item Using lemma 8.9 one can compute whether $a,b$ are even or odd and therefore the parity of $ab$
+    \item He can also find the parity of $c$
+    \item If $c=ab$ then the two parities always match
+    \item If $c$ is randomly and independently chosen then they will match with probability $1/2$
+    \item If the adversary compares the parities of $ab$ and $c$ and if they equal then he guess that he is in case $ab = c$ 
+    \item Otherwise he guesses that $c$ is random
+    \item This achieves advantage $1-1/2 = 1/2$ which is not negligible
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Prime Order Subgroups of $\mathbb Z_p^*$}
+\begin{itemize}
+  \item To get CPA-security one needs to use, instead of $\mathbb Z_p^*$ a subgroup of large prime order
+  \begin{itemize}
+  	\item This can be done using safe primes
+  \end{itemize}
+  \item For every prime $q$ that divides $p-1$ for prime $p$ there is exactly one subgroup $G$ of order $q$
+  \begin{itemize}
+  	\item For a safe prime if $\alpha_0$ generates all of $\mathbb Z_p^*$ then $\alpha = \alpha_0^2$ generates this subgroup
+  \end{itemize}
+
+  \item Algorithm for generating $G$ and $\alpha$:
+  \begin{itemize}
+	  \item On input $k$ generate a $k$ bit prime $p$ where $p = 2q +1$ and generator $\alpha _0$ of $\mathbb Z _ p^*$
+	  \item Let $G$ be the subgroup of order $q$, and set $\alpha = \alpha_0^2$. Output $p,q,\alpha$
+  \end{itemize}
+
+  \item To be able to encrypt and decrypt any number in $Z_q$ one does the following
+  \begin{itemize}
+  	\item \textbf{Encryption} On input $x \in Z_q$ set $y=x+1$ and compute $y^{(p-1)/2} \text{ mod } p$
+    \begin{itemize}
+  		\item If this is $1$ output $y$ else output $-y \text{ mod } p$
+    \end{itemize}
+  	\item \textbf{Decryption} On input $g \in G \subset \mathbb Z_p^*$ test if $g \leq q$.
+    \begin{itemize}
+  		\item If so set $y=g$ else set $y = -g \text{ mod } p$.
+  		\item Output $y-1$
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+\subsection{Public-Key Encryption Based on LWE}
+\begin{itemize}
+  \item \textbf{Learning with errors (LWE) problem} is defined over a finite field $F_q$ for a prime $q$
+  \begin{itemize}
+  	\item All computations are done modulo $q$
+  	\item A secret vector $\mathbf{s} \in F_q^n$ are involved
+  	\item The problem is: Given random $\left\{\mathbf{a}_{i} \in F_{q}^{n}\right\}_{i=1}^{m}$ and $\left\{\mathbf{a}_{i} \cdot \mathbf{s}+e_{i}\right\}_{i=1}^{m}$ where the $e_i$'s are random by numerical small. The goal is to find $\mathbf s$
+  	\item $e_i$'s being random and numerical small always means that they are much smaller than $q$
+    \begin{itemize}
+  		\item $e_i$ can be e.g. uniformly chosen in the interval $[-\sqrt{q}, \sqrt{q}]$
+    \end{itemize}
+  	\item It is assumed that the $e_i$'s are chosen with a distribution $D_e$ with the following property: \textit{even if one sample $m$ values distributed according to $D_e$ take numeric value ad sum them, the result will be smaller than $q/4$ with overwhelming probability}
+  \end{itemize}
+
+  \item Decision version of LWE
+  \begin{itemize}
+  	\item One are given random $\left\{\mathbf{a}_{i} \in F_{q}^{n}\right\}_{i=1}^{m}$ and either $\left\{\mathbf{a}_{i} \cdot \mathbf{s}+e_{i}\right\}_{i=1}^{m}$ or $\left\{u_{i}\right\}_{i=1}^{m}$ where the $u_{i}$ are uniformly random
+  	\item The goal is to decide which case you are in
+  	\item The decision LWE is hard if any PPT algorithm can only distinguish the two cases with negligible advantage in $n$
+  \end{itemize}
+
+  \item Secret key based on LWE
+  \begin{itemize}
+  	\item The secret key is $\mathbf{s}$
+  	\item To encrypt a bit $w \in \{0,1\}$ one will send the ciphertext: $(\mathbf{a}, \mathbf{a} \cdot \mathbf{s}+e+\lceil q / 2\rceil w)$
+  	\item To decrypt the cipher text $(\mathbf{u},v)$ the receiver can compute $v-\mathbf{u} \cdot \mathbf{s}$
+    \begin{itemize}
+  		\item If Clearly, if $e<<q$ then this value will be close to 0 if $w=0$ and close to $|q / 2|$ if $w=1$
+    \end{itemize}
+  \end{itemize}
+
+  \item Public key based on LWE
+  \begin{itemize}
+  	\item \textbf{Key Generation}
+    \begin{itemize}
+    	\item \textbf{Secret key:} random vector $s \in F_{q}^{n}$ 
+      \item \textbf{Public key:} $\left\{c_{i}\right\}_{i=1}^{m}$ where $c_{i}=\left(\mathbf{a}_{i}, \mathbf{a}_{i} \cdot \mathbf{s}+e_{i}\right)$ where $\mathbf{a}_{i}$ are uniformly random and the $e_{i}$ are chosen according to $D_{e}$
+    \end{itemize}
+  	\item \textbf{Encryption}
+    \begin{itemize}
+    	\item Message is a bit $w$
+      \item Choose random bits $b_{1}, \ldots, b_{m}$ and then the ciphertext is $\sum_{i=1}^{m} b_{i} c_{i}+(0,\lceil q / 2\rceil w)$
+    \end{itemize}
+  	\item \textbf{Decryption} To decrypt $(\mathbf{u}, v)$ compute $v-\mathbf{s} \cdot \mathbf{u}$
+    \begin{itemize}
+    	\item Output 0 if this value is closer to 0 than it is to $\lceil q / 2\rceil$
+      \item Output 1 otherwise.
+    \end{itemize}
+  \end{itemize}
+
+  \item \textbf{Lemma 9.1} If $m \geq n + (n+1) \log_2(q)$, then the following two distributions can be distinguished with only negligible in $n$ advantage (even by an unbounded adversary)
+  \begin{align*}
+    \{\mathbf{a}_i, u_i\}_{i=1}^m, \sum_{i=1}^m b_i(\mathbf{a_i},u_i) \\
+    \{\mathbf{a}_i, u_i\}_{i=1}^m, \mathbf{r}
+  \end{align*}
+  where $\mathbf{r} \in F_q^{n+1}$ is chosen uniformly and independently of anything else
+  \begin{itemize}
+  	\item Thereby $\sum_{i=1}^m b_i(\mathbf{a_i},u_i)$ is essentially uniformly random even if one are given $\{\mathbf{a}_i, u_i\}_{i=1}^m$ but not the $b_i$'s
+  \end{itemize}
+  \item This basic form of cryptosystem is quire inefficient since to get reasonable security one needs $q$ to be around 1000 and $n$ to be a few hundred
+\end{itemize}
+
+\newpage
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "crypto-noter"
+%%% End:

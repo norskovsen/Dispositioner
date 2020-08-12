@@ -1,0 +1,236 @@
+\section{Commitment schemes and the protocol for graph Hamiltonicity}
+\begin{itemize}
+	\item A commitment means that a player in a protocol is able to
+  \begin{itemize}
+	  \item Choose a value from some finite set
+  	\item Commit to a choice such that he can no longer change his mind
+  	\item The choice do not have to be revealed
+		\item He may reveal the choice at a later time
+  \end{itemize}
+  \item There are two important properties in a commitment scheme
+  \begin{enumerate}
+  	\item \textbf{Binding Property:} a given party cannot change his choice
+  	\item \textbf{Hiding Property:} another party cannot see what a given party has chosen without the given party somehow revealing it
+  \end{enumerate}
+\end{itemize}
+
+\subsection{(In)distinguishability of Probability Distributions}
+\begin{itemize}
+  \item \textbf{Definition 1} $\epsilon(l)$ is \textbf{negligible} in $l$ if for any polynomial $p$, $\epsilon(l) \leq 1/p(l)$ for all large enough $l$
+  \begin{itemize}
+  	\item i.e. events that occur with negligible probability occur so seldom that polynomial time algorithms will never see them happening
+  \end{itemize}
+  \item Consider a \textit{probabilistic algorithm} $U$
+  \begin{itemize}
+  	\item For a possible string $y$ there some probability $U_x(y)$ that $y$ is output when $x$ was the input
+  	\item $U_x$ is the probability distribution of $U$'s output on input $x$
+  	\item $U$'s output is polynomial in the input length
+  \end{itemize}
+  \item Consider two \textbf{probabilistic algorithms} $U$, $V$ and the following experiment
+  \begin{itemize}
+  	\item We run both $U$ and $V$ on the same input $x$ and one of the outputs $y$ produced is chosen
+  	\item $x$ and $y$ are given to a third party $D$ called the \textbf{distinguisher}
+  	\item $D$ should decide which the two algorithms are used to produce $y$
+  	\item $U$, $V$ are \textbf{indistinguishable} if $D$ has a hard time
+  \end{itemize}
+  \item \textbf{Definition 2} Given two probability distributions $P$, $Q$, the \textbf{statistical distance} between them is defined to be $SD(P,Q) = \sum_y |P(y)-Q(y)|$ where $P(y)$ (or $Q(y)$) is the probability $P$ (or $Q$) assigns to $y$
+  \item \textbf{Definition 3} Given two probabilistic algorithms (or families of distribution) $U$, $V$ then 
+  \begin{itemize}
+  	\item $U$, $V$ are \textbf{perfectly indistinguishable} written $U \sim^p V$, if $U_x = V_x$ for every $x$
+  	\item $U$, $V$ are \textbf{statistically indistinguishable} written $U \sim^s V$, if $\text{SD}(U_x,V_x)$ is negligible in the length of the string $x$
+  	\item $U$, $V$ are \textbf{computationally indistinguishable} written $U \sim^c V$, if the following holds for every probabilistic polynomial time algorithm $D$
+    \begin{itemize}
+  		\item Let $p_{U,D}(x)$ be the probability that $D$ outputs "$U$" as its guess, when $D$'s input comes from $U$
+  		\item Similarly let $p_{V,D}(x)$ be the probability that $D$ outputs "$V$" as its guess when $D$'s input comes from $V$
+  		\item Then $|p_{U,D}(x) - p_{V,D}(x)|$ is negligible in the length of $x$
+    \end{itemize}
+  \end{itemize}
+
+  \item Sometimes one does not want to consider how $U$, $V$ behave on arbitrary input $x$, but only when $x$ is in some language $L$
+  \begin{itemize}
+  	\item e.g. $U \sim ^c V$ on input $x \in L$
+  \end{itemize}
+  \item If $U \sim ^p V$, then $D$ has not change of distinguishing the two probability distributions and thus the best bet is a coin flip
+  \item If $U \sim^s V$, $D$ may have a small advantage over a random guess but it will remain negligible independent of computing power
+  \item If $U \sim^c V$ the two distributions $U_x$, $V_x$ may be totally different but it requires a lot of computing power to tell the difference
+  \begin{itemize}
+	\item $D$'s change of success remain small if it is limited to polynomial time
+  \end{itemize}
+\end{itemize}
+
+\subsection{Commitment Scheme Definition}
+\begin{itemize}
+  \item A commitment scheme is thought of as being defined by a probabilistic polynomial time algorithm $\mathcal G$ called a \textbf{generator}
+  \begin{itemize}
+  	\item \textbf{Input:} $1^l$ where $l$ is a security parameter
+  	\item \textbf{Output:} string $pk$, the public key of the commitment scheme
+  	\item For every public key $pk$ a function is defined as follows
+    \[
+      \mathsf{commit}_{pk}: \{0,1\}^l \times \{0,1\} \rightarrow \{0,1\}^l
+    \] 
+		thus a $0/1$ value can be committed to
+  \end{itemize}
+  \item A commitment scheme is used as follows in practice:
+  \begin{itemize}
+    \item The \textbf{setup phase}
+    \begin{enumerate}
+      \item Either $P$ or $V$ runs $\mathcal G$ and sends the public key $pk$ to the other party
+      \item In some schemes it is necessary to convince the other party that $pk$ was correctly chosen
+      \item The set-up phase may be rejected i.e. the party refuses to use the public key received 
+    \end{enumerate}
+    \item If the public key was accepted one can commit to a bit as follows
+    \begin{itemize}
+      \item $P$ chooses $r$ at random from $\{0,1\}^l$ and computes the commitment $C \leftarrow \text{commit}_{pk}(r,b)$
+      \item To open a commitment, $r,b$ are revealed,
+      \begin{itemize}
+        \item $V$ checks that indeed $C = \text{commit}_{pk} (r,b)$
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+\subsection{Types of Commitment Schemes}
+\begin{itemize}
+  \item \textbf{Unconditional binding and Computational hiding:}
+  \begin{itemize}
+    \item \textbf{Unconditional binding:} even with infinite computing power, $P$ cannot change his mind after committing
+    \begin{itemize}
+      \item If $pk$ is correctly generated, then $b$ is uniquely determined from $\text{commit}_{pk}(r,b)$ i.e. for any $c$, there exists at most one pair $(r,b)$ such that 
+      \[
+        c = \text{commit}_{pk}(r,b)
+      \]
+      \item An honest $V$ accepts an incorrectly generated $pk$ with probability negligible in $l$
+    \end{itemize}
+		\item \textbf{Computational hiding:} a polynomially bounded $V$ will have a hard time guessing what's inside a commitment and thus it must be the case that
+    \[
+      (pk,\text{commit}_{pk}(r,0)) \sim ^c (pk,\text{commit}_{pk}(s,1))
+    \]
+  \end{itemize}
+  \item \textbf{Computational binding and Unconditional hiding:}
+  \begin{itemize}
+		\item $V$ will run the key generator and send the public key to $P$, who verifies the key and either accepts or rejects
+		\item \textbf{Computational binding:} Unless one has very large computing the ones changes of being able to change ones mind are very small
+    \begin{itemize}
+			\item Take any probabilistic polynomial time algorithm $P^*$ which takes as input a public key produced by the generator $\mathcal G$ on input $1^l$
+			\item Let $\epsilon (l)$ be the (over the random choices of $\mathcal G$ and $P^*$) probability with which the algorithm outputs a commitment and two valid opening revealing distinct values i.e. it outputs $C, b,r,b^{'}, r^{'}$ such $b\ne b'$ and $\text{commit}_{pk} (r,b) = C = \text{commit}_\text{pk}(r^{'},b^{'})$
+			\item Then $\epsilon(l)$ is negligible in $l$ 
+    \end{itemize}
+		\item \textbf{Unconditional hiding:} a commitment to $b$ reveals (almost) no information about $b$
+    \begin{itemize}
+			\item Even to an infinitely powerful $V$
+			\item It holds that for correctly generated $pk$'s that
+      \[
+        \text{commit}_{pk}(r,0) \sim^s \text{commit}_{pk}(s,1)
+      \]
+			for randomly independent $r,s$ 
+			\item An honest $P$ should accept an incorrectly generated $pk$ with at most negligible probability
+			\item In the best case 
+      \[
+        \text{commit}_{pk}(r,0) \sim^p \text{commit}_{pk}(s,1)
+      \]
+      and $P$ never accepts a bad $pk$ i.e. commitment reveal no information about committed values (\textbf{perfectly hiding commitments})
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+\subsection{Examples}
+\begin{itemize}
+  \item Any secure public key encryption scheme, where validity of the public key can be checked efficiently can be used as a commitment scheme
+  \item Consider any algorithm for generating on input $1^l$ a secure RSA $l$ bit modulus $n$
+  \begin{itemize}
+  	\item This can be extended by choosing a prime $q > n$ and defining $f(x) = x^q \text{ mod } n$
+  	\item Assuming that RSA with modulus $n$ a public exponent $q$ is secure $f$ is a one-way function i.e. given $f(x)$ it is hard to compute $x$
+  	\item $f$ is a \textbf{homomorphism} i.e., $f(1) = 1$ and $f(xy) = f(x)f(y)$
+  	\item Since $q$ is a large prime than $n$, must be prime to $\phi(n)$ and so $q$ is a valid RSA exponent
+    \begin{itemize}
+  		\item This means that one directly can check from $n$,$q$ that $f$ is a 1-1 mapping on $Z_n^*$
+    \end{itemize}
+  	\item The algorithm for selecting $n,q$ is called $\mathcal H$
+  \end{itemize}
+  \item \textbf{RSA assumption:} Suppose we run $\mathcal H$ on input $1^l$ to get $n$, $q$, choose $x$ at random in $Z_n^*$ and run any probabilistic polynomial time algorithm $A$ on input $n,q,f(x)$. Then the probability that $A$ outputs $x$ is negligible in $l$
+  \item Using the RSA assumption one can build a unconditional hiding commitment scheme as follows
+  \begin{itemize}
+  	\item \textbf{Set-up Phase:} The key generator $\mathcal G$ for the commitment scheme is defined based on $\mathcal H$ as follows:
+    \begin{enumerate}
+		  \item It runs $\mathcal H$ on input $1^l$
+      \item It chooses a random element $x \in Z^*_n$ and outputs as public key $n,q$ and $y = f(x)= x^q \text{ mod } n$
+      \item $V$ runs $\mathcal G$ and sends the output $n,q,y$ to $P$, who checks that $y \in \text{Im}(f) = Z_n^*$ i.e. it checks that $\text{gcd}(y,n) = 1$
+    \end{enumerate}
+  	\item \textbf{Commit function:} is defined as a mapping from $Z^*_n \times \{0,1\}$ to $G$ and is concretely defined to be
+    \[
+      \text{commit}_{pk}(r,b) = y^bf(r)\text{ mod } n
+    \]
+  	\item \textbf{Hiding Property:} unconditionally satisfied
+    \begin{itemize}
+  		\item $P$ can verify without error that $q$ is a valid exponent and that $y \in \text{Im}(f)$
+  		\item A commitment to $b$ will have distribution independent of $b$ i.e. the uniform distribution over $Z_n^*$ because
+      \begin{itemize}
+			  \item $P$ chooses $r$ uniformly in $Z_n^*$
+  			\item $f$ is a one-to-one mapping and therefore $f(x)$ is also uniform in $Z_n^*$
+  			\item Multiplication by the constant $y$ is also a one-to-one mapping in the group $Z_n^*$
+  			\item $y \cdot f(x) \text{ mod } n$ is uniform as well
+      \end{itemize}
+  		\item These commitments are perfectly hiding
+    \end{itemize}
+  	\item \textbf{Binding Property:} computationally satisfied
+    \begin{itemize}
+  		\item An algorithm $A$ is given that breaks the binding property with success probability $\epsilon$ in time $T_A$
+  		\item Then there exists an algorithm $A'$ that breaks RSA encryption as generated by $\mathcal H$ with success probability $\epsilon$ as well and in time $T_A$ plus the time needed for one inversion and one multiplication in $Z_n ^*$
+  		\item Existence of $A$ implies existence of an algorithm $A'$ that contradicts the assumption on $\mathcal H$
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+\subsection{Theoretical results}
+\begin{itemize}
+  \item \textbf{Theorem 2.1} If one-way functions exist, then commitment schemes with unconditional biding and computation hiding exists
+  \item \textbf{Theorem 2.2} If one-way functions exist, then commitment schemes with computational biding and unconditional hiding exists
+  \item \textbf{Theorem 2.3} If collision-intractable hash functions exist, then there exists commitment schemes with unconditional hiding and computational biding
+  \item A collision intractable hash function is $h \{0,1\}^k \leftarrow \{0,1\}^l$ such that
+  \begin{itemize}
+  	\item $l< k$
+  	\item $h$ is easy to compute
+  	\item It is hard to find $x \ne y$ such that $h(x) = h(y)$
+  \end{itemize}
+\end{itemize}
+
+\subsection{Protocol for Graph Hamiltonicity}
+\begin{protocol}{Protocol Graph Hamiltonicity}{graph-haml}
+  \begin{enumerate}
+  	\item Execute the set-up procedure of the bit commitment scheme, with security parameter value $n$, which results in a public key $pk$ being produced
+    \begin{itemize}
+    	\item If the commitment scheme is computationally binding, $V$ will run a generator $\mathcal G(1^n)$, get a public key $pk$ and send it to $P$.
+      \item If the scheme is unconditionally binding, $P$ will run $\mathcal G$ and send $pk$ to $V$
+    \end{itemize}
+    \item Given graph $G$ on $n$ nodes, repeat the following $n$ times
+    \begin{enumerate}
+    	\item $P$ chooses a random permutation $\phi$ and computes $\phi(M_G)$ and commits to all bits in this matrix, it results in a matrix of commitments where
+      \[
+          C_{i,j} = \mathtt{commit}_{pk}(b_{ij}, r_{ij})
+      \]
+      where $b_{ij}$ is the $ij$'th entry in $\phi(M_G)$ and where $r_{ij}$ is a random string chosen by the prover. $P$ sends $C$ to $V$
+      \item $V$ chooses a random bit $b$
+      \item If $b=0$, $P$ must send $\phi$ to $V$ and open all commitments in $C$. $V$ checks that all commitments were correctly opened and that the resulting matrix of bits is indeed $\phi(M_{G})$ \\
+            If $b=1$, $P$ uses his knowledge of a Hamiltonian path $p$ in $G$:
+            \begin{itemize}
+            	\item He opens precisely the entries in $C$ that correspond to entries in $\phi(p)$
+              \item $V$ checks that all opened commitments where correctly opened i.e. a $1$ was opened in all cases, and that the entries opened specify a path that visits all nodes exactly once.
+            \end{itemize}
+    \end{enumerate}
+  \end{enumerate}
+\end{protocol}
+\begin{itemize}
+  \item If the prover $P$ claims $x \in L$ for some $L \in NP$ it can be assumed that $P$ knows some witness $w$ either he can computed it using his infinite computing power or he knows it in advance
+  \item \textbf{Theorem 3.} If a perfectly hiding and computational binding commitment scheme is used, then the Graph Hamiltonicity protocol (\autoref{prot:graph-haml}) is a perfect zero-knowledge interactive argument for Graph Hamltonicity
+  \begin{itemize}
+  	\item \textbf{Remark 1.} If the commitment scheme was only unconditionally, the protocol would have been statistically and not perfect zero-knowledge
+  \end{itemize}
+  \item \textbf{Lemma 1.} Consider any matrix of commitments $C$ sent in step (a). Let $R_{0}$ be a possible reply from a (not necessarily honest) prover to $b=0$, similarly $R_{1}$ is a possible reply to $b=1$. If $V$ accepts both $R_{0}$ and $R_{1}$ and if every commitment from $C$ that is opened in $R_{1}$ is also opened to reveal 1 's in $R_{0}$, then $G$ is Hamiltonian.
+\end{itemize}
+
+\newpage
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "cpt-noter"
+%%% End:

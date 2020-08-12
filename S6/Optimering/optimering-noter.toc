@@ -1,0 +1,39 @@
+\babel@toc {danish}{}
+\contentsline {section}{\numberline {1}The linear programming model and LP algorithms}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Lineær programmering}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Simplex algoritmen}{4}{subsection.1.2}%
+\contentsline {subsubsection}{\numberline {1.2.1}Dictionary}{4}{subsubsection.1.2.1}%
+\contentsline {subsubsection}{\numberline {1.2.2}Pivot}{5}{subsubsection.1.2.2}%
+\contentsline {subsubsection}{\numberline {1.2.3}Auxilary Dictionary}{6}{subsubsection.1.2.3}%
+\contentsline {subsection}{\numberline {1.3}Elipsoid algoritmen}{6}{subsection.1.3}%
+\contentsline {section}{\numberline {2}LP Duality, Matrix Games, and Integer linear programming.}{7}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Dual}{7}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Matrix spil}{9}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Integer lineær programmering}{12}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}The Traveling Salesman Problem}{12}{subsubsection.2.3.1}%
+\contentsline {subsubsection}{\numberline {2.3.2}Branch and Bound}{13}{subsubsection.2.3.2}%
+\contentsline {section}{\numberline {3}Network Flows and Minimum Cost Flow algorithms}{14}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Totally unimodular matrices}{14}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Flow netværk}{15}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}Minimum cost flow problem}{15}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}Maximum $(s,t)$-flow problem}{16}{subsubsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.3}Network simplex algoritme}{16}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Klein cycle cancelling algoritme}{18}{subsection.3.4}%
+\contentsline {section}{\numberline {4}P, NP, and Cook's theorem}{21}{section.4}%
+\contentsline {subsection}{\numberline {4.1}NP completeness teori}{21}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Language complexity}{21}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}SAT og Circuit SAT}{22}{subsection.4.3}%
+\contentsline {section}{\numberline {5}NP complete problems}{27}{section.5}%
+\contentsline {subsection}{\numberline {5.1}SAT og varianter af SAT}{27}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Graf problemer}{28}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Mængder og tal}{30}{subsection.5.3}%
+\contentsline {section}{\numberline {6}Approximation Algorithms and Local Search Heuristics.}{33}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Approximation algoritmer}{33}{subsection.6.1}%
+\contentsline {subsubsection}{\numberline {6.1.1}Vertex cover}{33}{subsubsection.6.1.1}%
+\contentsline {subsubsection}{\numberline {6.1.2}The traveling-salesman problem}{34}{subsubsection.6.1.2}%
+\contentsline {subsubsection}{\numberline {6.1.3}Randomisering}{36}{subsubsection.6.1.3}%
+\contentsline {subsubsection}{\numberline {6.1.4}Lineær programmering}{37}{subsubsection.6.1.4}%
+\contentsline {subsubsection}{\numberline {6.1.5}Approximations schemes}{38}{subsubsection.6.1.5}%
+\contentsline {subsection}{\numberline {6.2}Local search heuristikker}{38}{subsection.6.2}%
+\contentsline {subsubsection}{\numberline {6.2.1}Tur konstruktions heuristikker}{38}{subsubsection.6.2.1}%
+\contentsline {subsubsection}{\numberline {6.2.2}Natural neighborhood for TSP}{39}{subsubsection.6.2.2}%

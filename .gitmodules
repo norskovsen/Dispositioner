@@ -1,0 +1,3 @@
+[submodule "LaTeX-Preamble"]
+	path = LaTeX-Preamble
+	url = git@github.com:norskovsen/LaTeX-Preamble.git

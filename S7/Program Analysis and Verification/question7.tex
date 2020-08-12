@@ -1,0 +1,163 @@
+\section{Basic Separation Logic: Specs and Proof for Abstract Data Types}
+\input{basic-seperation-logic}
+\subsection{Counter module}
+\subsubsection{Spec version 1}
+\begin{itemize}
+	\item The simplest way of writing a counter module is to write the following three functions
+  \begin{align*}
+    \text{mk\_counter} &= \lambda \_.\text{ref}(0) \\
+    \text{inc\_counter} &= \lambda x.x \leftarrow !x+1 \\
+    \text{read\_counter} &= !x
+  \end{align*}
+  and prove the three following specifications
+  \begin{align*}
+    &\{\text{True}\} \; \text{mk\_counter}() \; \{v.v \hookrightarrow n+1\} \\
+    &\{\ell \hookrightarrow n\} \; \text{inc\_counter} \; \ell \; \{v.v = () \land \ell \hookrightarrow n+1\} \\
+    &\{\ell \hookrightarrow n\} \; \text{read\_counter} \; \ell \; \{v.v = n \land \ell \hookrightarrow n\}
+  \end{align*}
+  \item Problems
+  \begin{itemize}
+    \item Exposes the internals of the counter i.e. not so modular
+    \item If a client is verified relative to this spec and the data representation has been changed then the client should be re-verified
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Spec version 2}
+\begin{itemize}
+	\item A more abstract and modular specification of the counter module is the following which existentially quatifies over the ``counter representation predicate'' $C$ and therefore hides that the return value is a location
+  \begin{align*}
+    \text{mk\_counter} &= \lambda \_.\text{ref}(0) \\
+    \text{inc\_counter} &= \lambda x.x \leftarrow !x+1 \\
+    \text{read\_counter} &= !x
+  \end{align*}
+  and the following specifications
+  \begin{align*}
+    &\exists C: \text{Val} \rightarrow \mathbb N \rightarrow \text{Prop} \\
+    &\{\text{True}\} \; \text{mk\_counter}() \; \{c.C(c,0)\} \\
+    &\forall c. \{C(c,n)\} \; \text{inc\_counter} \; \ell \; \{v.v = () \land C(c,n+1)\} \\
+    &\forall c. \{C(c,n)\} \; \text{read\_counter} \; \ell \; \{v.v = n \land C(c,n)\}
+  \end{align*}
+  \item Problems
+  \begin{itemize}
+  	\item Implementation code does not provide any abstraction
+    \item Client of the code may directly modify the reference cell representing the counter
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Spec version 3}
+\begin{itemize}
+	\item To encapsulate the code in a typed language one would use some form of module types / existential types
+  \item In our untype language local state encapsulation is used by returning a pair of methods which have a hidden internal state variable $x$ as follows
+  \begin{equation*}
+    \text{counter} = \lambda\_.\text{let} \; x = \text{ref}(0) \text{ in }(\lambda\_.x \leftarrow !x + 1, \lambda \_. !x)
+  \end{equation*}
+  the specification of this needs to be nested hoare triples as follows 
+  \begin{equation*} 
+    \{\text{True} \} \text{counter}(f) \left\{
+      \begin{split} 
+                                                & \ell \hookrightarrow 0 * \\
+        v.\exists \ell: \mathbb N \to \text{Prop}. & \forall n. \{\ell \hookrightarrow n\} v.\text{inc}() \{u.u=() \land \ell \hookrightarrow (n+1)\} * \\
+                                                & \forall n. \{\ell \hookrightarrow n\} v.\text{read}() \{u.u=n \land \ell \hookrightarrow n\}  \\
+      \end{split}
+      \right\}
+  \end{equation*}
+  where $v.\text{inc}$ is used in place of $\pi_1 v$ and $v.\text{read}$ is used in place of $\pi_2 v$ 
+  \item Problems
+  \begin{itemize}
+  	\item It exposes that the internal state is a single location
+  \end{itemize}
+\end{itemize}
+\subsubsection{Spec version 4}
+\begin{itemize}
+  \item To fix the problem from version 3 existential quantification is used of the representation predicate
+  \begin{equation*}
+    \text{counter} = \lambda\_.\text{let} \; x = \text{ref}(0) \text{ in }(\lambda\_.x \leftarrow !x + 1, \lambda \_. !x)
+  \end{equation*}
+  the specification of this needs to be nested hoare triples as follows 
+  \begin{equation*} 
+    \{\text{True} \} \text{counter}(f) \left\{
+      \begin{split} 
+                                                & C(0) * \\
+        v.\exists C: \mathbb N \to \text{Prop}. & \forall n. \{C(n)\} v.\text{inc}() \{u.u=() \land C(n+1)\} * \\
+                                                & \forall n. \{C(n)\} v.\text{read}() \{u.u=n \land C(n)\}  \\
+      \end{split}
+      \right\}
+  \end{equation*}
+  where $v.\text{inc}$ is used in place of $\pi_1 v$ and $v.\text{read}$ is used in place of $\pi_2 v$ 
+  \item Pros
+  \begin{itemize}
+  	\item It is modular 
+  \end{itemize}
+  \item Cons
+  \begin{itemize}
+  	\item Code and Spec are a bit more convoluted
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Proof of version 4}
+\begin{itemize}
+	\item The syntactic sugar for the methods is removed and the predicate $C(n) = \exists \ell . \ell \hookrightarrow n$ is used as a witness
+  \[
+  \{\text{True} \} \text{counter}(f) \left\{
+    \begin{split} 
+         & \exists \ell. \ell \hookrightarrow 0  * \\
+      v. & \forall n. \{\exists \ell. \ell \hookrightarrow n\} (\pi_1 v)() \{u.u=() \land \exists \ell. \ell \hookrightarrow n+1\} * \\
+         & \forall n. \{\exists \ell. \ell \hookleftarrow n\} (\pi_2 v) () \{u.u=n \land \exists \ell. \ell \hookrightarrow n\}  \\
+    \end{split}
+    \right\}
+  \]
+  \item Since the program starts with a let expression the \texttt{HT-LET} rule is used. Which is done by first proving that 
+  \begin{equation*}
+    \{\text{True} \} \text{ref}(0) \{v. \exists \ell. \ell \hookrightarrow 0\}
+  \end{equation*}
+  which is done by using $\forall$I, $\exists$I and $\Rightarrow$I together with \texttt{HT-CSQ} to get
+  \begin{equation*}
+    \{\text{True} \} \text{ref}(0) \{v. v \hookrightarrow 0\}
+  \end{equation*}
+  using the \texttt{HT-RET} rule. Then we are left with proving
+  \begin{equation*}
+    \{\exists \ell . \ell \hookrightarrow 0 \}\left(\lambda_{-}. \ell \leftarrow !\ell+1, \lambda_{-}. ! \ell\right) \left\{
+    \begin{split} 
+         & \exists \ell. \ell \hookrightarrow 0  * \\
+      v. & \forall n. \{\exists \ell. \ell \hookrightarrow n\} (\pi_1 v)() \{u.u=() \land \exists \ell. \ell \hookrightarrow n+1\} * \\
+         & \forall n. \{\exists \ell. \ell \hookleftarrow n\} (\pi_2 v) () \{u.u=n \land \exists \ell \hookrightarrow n\}  \\
+    \end{split}
+    \right\}
+  \end{equation*}
+  \item To prove that this holds the rule \texttt{HT-FRAME} is used and thus we get
+  \begin{equation*}
+    \{\exists \ell . \ell \hookrightarrow 0 \}\left(\lambda_{-}. \ell \leftarrow !\ell+1, \lambda_{-}. ! \ell\right) \left\{
+    \begin{split} 
+         & \exists \ell. \ell \hookrightarrow 0  * \\
+      v. & \forall n. \{\exists \ell. \ell \hookrightarrow n\} (\pi_1 v)() \{u.u=() \land \exists \ell. \ell \hookrightarrow n+1\} * \\
+         & \forall n. \{\exists \ell. \ell \hookleftarrow n\} (\pi_2 v) () \{u.u=n \land \exists \ell \hookrightarrow n\}  \\
+    \end{split}
+    \right\}
+  \end{equation*}
+  \item The only thing left is to prove that the two returned functions abides the specification. Thus it must proven that
+  \begin{equation*}
+    \forall n. \{\exists \ell. \ell \hookrightarrow n\} (\pi_1 v)() \{u.u=() \land \exists \ell. \ell \hookrightarrow n+1\}
+  \end{equation*} 
+  holds and
+  \begin{equation*}
+    \forall n. \{\exists \ell. \ell \hookrightarrow n\} (\pi_2 v) () \{u.u=n \land \exists \ell . \ell \hookrightarrow n\}
+  \end{equation*}
+  holds.
+  \item To prove the first case \texttt{HT-PROJ} is used together with \texttt{HT-BETA} and thus we are left with proving 
+  \begin{equation*}
+    \forall n. \{\exists \ell. \ell \hookrightarrow n\} \ell \leftarrow !\ell +1 \{u.u=() \land \exists \ell. \ell \hookrightarrow n+1\}
+  \end{equation*} 
+  which can be proven using \texttt{HT-BIND-DET} multiple times together with \texttt{HT-RET} to compute $!x+1$ and then \texttt{HT-STORE} rule together with \texttt{HT-CSQ}. \smallskip \\
+  \item The second case \texttt{HT-PROJ} is used together with \texttt{HT-BETA} and thus we are left with proving 
+  \begin{equation*}
+    \forall n. \{\exists \ell. \ell \hookrightarrow n\} ! x \{u.u=n \land \exists \ell. \ell \hookrightarrow n\}
+  \end{equation*} 
+  which can be proven using the \texttt{HT-LOAD} rule together with \texttt{HT-CSQ} used with $\forall$I $\exists$I, $\Rightarrow$I and \texttt{Asm} on the post condition.
+  \item Since the returned function obeys the required specification, the specification of the \texttt{counter} module must be correct. 
+\end{itemize}
+
+\newpage
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "pav-noter"
+%%% End:

@@ -1,0 +1,47 @@
+\subsection{Public-key Cryptosystem Definition}
+\begin{itemize}
+  \item A trapdoor oneway function is an injective $f: X \to Y$ where are $X,Y$ are finite sets is a function such that
+  \begin{itemize}
+    \item Computing $f(x)$ from input $x$ is easy
+    \item Computing $x$ from $f(x)$ for a random $x \in X$ is infeasible
+    \item $f$ might come with a trapdoor $t_f$ such that given this extra information it would be easy to compute $x$ from $f(x)$
+  \end{itemize}
+  \item Pairs $(f,t_f)$ of function and trapdoor could be a public key encryption system
+  \begin{itemize}
+    \item $f$ could serve as the public key
+    \item Anyone could encrypt $x \in X$ to ciphertext $y = f(x)$
+    \item Only the party who knows $t_f$ is able to recover $x$ from $y$
+  \end{itemize}
+
+  \item \textbf{Definition 6.1} A public-key cryptosystem consists of 3 algorithms $(G,E,D)$, satisfying the following:
+  \begin{itemize}
+  	\item $G$ algorithm for generating keys:
+    \begin{itemize}
+  		\item It is probabilistic
+  		\item Takes security parameter $k$ as input
+  		\item Always outputs a pair of keys $(pk,sk)$ (the public and secret key)
+  		\item It is assumed that the public key contains a description of
+      \begin{itemize}
+  			\item $\mathcal P$, the set of plaintexts
+  			\item $\mathcal C$, the set of ciphertexts
+      \end{itemize}
+  		\item $\mathcal P$ and $\mathcal C$ does not have to be the same for every key
+    \end{itemize}
+  	\item $E$ an algorithm for encryption
+    \begin{itemize}
+  		\item It takes as input $pk$ and $x \in \mathcal P$
+  		\item It produces as output $E_{pk}(x) \in \mathcal C$
+  		\item It may be probabilistic i.e. the ciphertext will have a probability distribution that is determined from $x$ and $K$
+    \end{itemize}
+  	\item $D$ algorithm for decryption
+    \begin{itemize}
+  		\item It takes as input $sk, y \in \mathcal C$ and produces as output $D_{sk}(y) \in \mathcal P$
+  		\item It is allowed to be probabilistic but is in most cases deterministic
+    \end{itemize}
+  	\item It is required for any $x \in \mathcal P$ that $x = D_{sk}(E_{pk}(x))$
+  \end{itemize}
+\end{itemize}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "crypto-noter"
+%%% End:

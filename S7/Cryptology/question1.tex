@@ -1,0 +1,259 @@
+\section{Information Theory and Cryptography} 
+\begin{itemize}
+  \item \textbf{Computational security} 
+  \begin{itemize}
+    \item It should not be possible to break in a given reasonable time previous
+    \item Often defined for some large number
+  \end{itemize}
+  \item \textbf{Provable security} 
+  \begin{itemize}
+  	\item One should prove that break the cryptosystem is at hard as solving some other NP-complete problem
+  	\item Does not give the absolute proof of the computation difficulty of the problem
+  \end{itemize}
+  \item \textbf{Unconditional security}
+  \begin{itemize}
+	  \item It is unconditionally secure if it cannot be solved even with unlimited computing power
+  \end{itemize}
+\end{itemize}
+
+\subsection{Perfect secrecy}
+\begin{itemize}
+	\item It is assumed that a cryptosystem is specified and a particular key $K \in \mathcal K$ is used for only one encryption
+  \item A distribution is given the plaintext space $\mathcal P$ and defines a random variable $X$
+  \begin{itemize}
+  	\item The probability that $x$ is chosen is $\text{Pr}[X=x]$
+  \end{itemize}
+  \item The key $k$ is chosen from a fixed probability (uniformly)
+  \begin{itemize}
+  	\item The key also defines a random variable denoted $K$
+  	\item The probability that $k$ is chosen is $\text{Pr}[K=k]$
+  \end{itemize}
+  \item The key and plaintext are independent random variables
+  \item The two probability distribution on $X$ and $P$ induces a probability distribution on $\mathcal C$ called $Y$
+  \item $C(K)$ represents the set of possible ciphertexts if $K$ is the key.
+  \begin{equation*}
+    C(K) = \{E_K(x) \mid x \in \mathcal P\}
+  \end{equation*}
+  \item For every $y \in \mathcal C$ we have that 
+  \begin{equation*}
+    \text{Pr}[Y=y] = \sum_{\{K \mid y \in C (K)\}} \text{Pr}[K=k] Pr[X = D_K(y)]
+  \end{equation*}
+  \item The condition probability $Pr[Y=y \mid X=x]$ i.e. the probability that $y$ is the ciphertext, given that $x$ is the plaintext is the following
+  \begin{equation*}
+    Pr[Y=y \mid X = x] = \sum_{K \mid x = d_K (y)} Pr[K=k]
+  \end{equation*} 
+  \item Using Bayes's theorem the probability that $x$ is the plaintext can be computed:
+  \begin{equation*}
+    Pr[X=x \mid Y = y] = \frac{Pr[X=x] \cdot \sum_{K \mid x = d_K (y)} Pr[K=k]}{\sum_{\{K \mid y \in C (K)\}} Pr[K=k] Pr[X = D_K(y)]} 
+  \end{equation*}
+  \item \textbf{Definition} A cryptosystem has perfect secrecy if 
+  \begin{equation*}
+    Pr[x \mid y] = Pr [x]
+  \end{equation*}
+  for all $x \in \mathcal P, y \in \mathcal C$
+  \item \textbf{Theorem} If the 26 keys in the shift cipher are used with equal probability. Then for any plaintext distribution the Shift Cipher has perfect secrecy
+  \begin{itemize}
+	  \item The Shift Cipher is unbreakable given that a new random key is used to encrypt every plaintext character
+  \end{itemize}
+  \item \textbf{Theorem} Given a cryptosystem where $|\mathcal K| = | \mathcal C| = |\mathcal P|$. The cryptosystem provides perfect secrecy if and only if every key is used with equal probability $1/|\mathcal K$ and every $x \in \mathcal P$ and every $y \in \mathcal C$ there is a unique key such that $E_K(x) = y$ \smallskip \\
+  \textbf{Proof}: Given that the cryptosystem provides perfect security 
+  \begin{itemize}
+  	\item There must be for each $x \in \mathcal P$ and $y \in \mathcal C$ at least one key $K$ such that $E_K(x) = y$ 
+    \begin{itemize}
+    	\item Since....
+    \end{itemize}
+    \item This means that the following inequalities must hold
+    \begin{equation*}
+      |\mathcal C| = |\{E_k(x) | K \in \mathcal K \}| \leq |\mathcal K|
+    \end{equation*} 
+    Since $|\mathcal C| = |\mathcal K|$ it must be the case that 
+    \begin{equation*}
+      |\{E_k(x) | K \in \mathcal K \}| = |\mathcal K|
+    \end{equation*}
+    \item Thereby there do not exists two distinct keys $K_1$ and $K_2$ such that $E_{K_1}(x) = E_{K_2}(x) = y$
+    \item Thereby it has been shown that for any $x \in \mathcal P$ and $y \in \mathcal C$, there is exactly one key $K$ such that $E_K(x) = y$ 
+    \item Denote $n = |\mathcal K|$ and let  $\mathcal P = \{x_i \mid 1 \leq i \leq n\}$ and fix a ciphertext element $y \in \mathcal C$ 
+    \item They keys $K_1, K_2, \dots, K_n$ are named in such a way that $E_{K_i}(x_i) = y$ for $i = 1,\dots, n$ 
+    \item Using Bayes' theorem the following must be the case
+    \begin{align*}
+      \Pr[x_i \mid y] = \frac{\Pr[y \mid x_i] \Pr[x_i]}{\Pr[y]} &\Leftrightarrow \Pr[x_i \mid y] =\frac{\Pr[K = K_i] \Pr[x_i]}{\Pr[y]} \\
+      &\Leftrightarrow \Pr[x_i] =\frac{\Pr[K = K_i] \Pr[x_i]}{\Pr[y]} \\
+      &\Leftrightarrow 1 =\frac{\Pr[K = K_i]}{\Pr[y]} \\
+      &\Leftrightarrow \Pr[K = K_i] = \Pr[y] 
+    \end{align*}
+    using that the perfect security condition $\Pr[x_i \mid y] = \Pr[x_i]$ in step 3. Since $\Pr[K = K_i] = \Pr[y]$ it must imply that each key is used with equal probability.
+    \item Since the number of keys is $|\mathcal K$ it must be the case that $\Pr[K] = \frac{1}{\mathcal K}$ for every $K \in \mathcal K$ 
+  \end{itemize}
+  Conversely suppose that the two conditions are satisfied
+  \begin{itemize}
+  	\item TODO
+  \end{itemize}
+
+\end{itemize}
+
+\subsection{Entropy}
+\begin{itemize}
+  \item \textbf{Definition} Suppose $X$ is a discrete random variable which takes values from a finite set $S$. Then the \textbf{entropy} of the random variable $X$ is defined to be the quantity
+  \begin{equation*}
+    H(X) = -\sum_{x \in S} Pr [x] \log_2 Pr[x]
+  \end{equation*}
+  \item If $|S| =n$ and $Pr[x] = \frac{1}{n}$ for all $x \in S$ then $H(X) = \log_2 n$
+  \begin{itemize}
+	  \item $H(X) \geq 0$ for any random variable $X$
+  	\item $H(X)=0$ if and only if $Pr[x_0]= 1$ for some $x_0$ and $Pr[x] = 0$ for all $x \neq x_0$
+  \end{itemize}
+  \item One can compute the entropy of random variables $K$ for the keyspace $\mathcal K$, $P$ for the plaintext space $\mathcal P$ and $C$ for the ciphertext space $\mathcal C$
+  \item \textbf{Definition} A real-valued function $f$ is a concave function on an interval $I$ if
+  \[
+    f\left(\frac{x+y}{2}\right) \geq \frac{f(x)+f(y)}{2}
+  \]
+  for all $x, y \in I$. $f$ is a strictly concave function on an interval $I$ if
+  \[
+    f\left(\frac{x+y}{2}\right)>\frac{f(x)+f(y)}{2}
+  \]
+  for all $x, y \in I, x \neq y .$
+  \item \textbf{Theorem (Jensen's inequality)} Suppose $f$ is a continuous strictly concave function on the interval $I$. Suppose further that
+  $$
+    \sum_{i=1}^{n} a_{i}=1
+  $$
+  and $a_{i}>0,1 \leq i \leq n$. Then
+  $$
+    \sum_{i=1}^{n} a_{i} f\left(x_{i}\right) \leq f\left(\sum_{i=1}^{n} a_{i} x_{i}\right)
+  $$
+  where $x_{i} \in I, 1 \leq i \leq n .$ Further, equality occurs if and only if $x_{1}=\cdots=x_{n}$
+  \item \textbf{Theorem} Suppose $X$ is a random variable having a probability distribution which takes on the values $p_{1}, p_{2}, \ldots, p_{n},$ where $p_{i}>0,1 \leq i \leq n$. Then $H(\mathbf{X}) \leq \log _{2} n,$ with equality if and only if $p_{i}=1 / n, 1 \leq i \leq n$.
+  \item \textbf{Theorem} $H(X,Y) \leq H(X) + H(Y)$ with equality if and only if $X$ and $Y$ are independent variables
+  \item \textbf{Definition} Suppose $X$ and $Y$ are two randon variables. Then for any fixed value $y$ of $Y$, we get a (conditional) probability distribution on $X$. We denote the associated random variable by $X | y .$ Clearly,
+  $$
+    H(\mathbf{X} | y)=-\sum_{x} \operatorname{Pr}[x | y] \log _{2} \operatorname{Pr}[x | y]
+  $$
+  We define the conditional entropy, denoted $H(X | Y),$ to be the weighted average (with respect to the probabilities $\text{Pr}[y])$ of the entropies $H(X | y)$ over all possible values $y$. It is computed to be
+  $$
+    H (X | Y)=-\sum_{y} \sum_{x} \text{Pr}[y] \text{P r}[x | y] \log _{2} \text{Pr}[x | y]
+  $$
+  The conditional entropy measures the average amount of information about that is not revealed by $Y$.
+  \item \textbf{Theorem} $H(\mathbf{X}, \mathbf{Y})=H(\mathbf{Y})+H(\mathbf{X} | \mathbf{Y})$
+  \item \textbf{Corollary} $H(\mathbf{X} | \mathbf{Y}) \leq H(\mathbf{X})$, with equality if and only if $\mathbf{X}$ and $\mathbf{Y}$ are independent.
+\end{itemize}
+
+\subsection{Spurious Keys and Unicity Distance}
+\begin{itemize}
+  \item The conditional entropy $H(K \mid C)$ is called the \textbf{key equivocation} 
+  \begin{itemize}
+  	\item A measure of the amount of uncertainty of the key remaining when the ciphertext is known
+  \end{itemize}
+  \item \textbf{Theorem 2.10} Let $(\mathcal P, \mathcal C, \mathcal K, \mathcal E, \mathcal D)$ be a cryptosystem. Then
+  \begin{equation*}
+    H(K \mid C) = H(K) + H(P) - H(C)
+  \end{equation*} 
+  \item Suppose $(\mathcal P, \mathcal C, \mathcal K, \mathcal E, \mathcal D)$ is the cryptosystem being used and the string of plaintext
+  \begin{equation*}
+    x_1x_2 \cdots x_n
+  \end{equation*}
+  is encrypted with one key, produced a string of ciphertext	
+  \begin{equation*}
+    y_1y_2 \cdots y_n
+  \end{equation*}	
+  \item $P^n$ is the random variable that has as its probability distribution of all $n$ grams of plaintext
+  \item \textbf{Definition} Suppose $L$ is a natural language. The entropy of $L$ is defined to be the quantity
+  $$
+    H_{L}=\lim _{n \rightarrow \infty} \frac{H\left(\mathbf{P}^{n}\right)}{n}
+  $$
+  and the \textbf{redundancy} of $L$ is defined to be
+  $$
+    R_{L}=1-\frac{H_{L}}{\log _{2}|\mathcal{P}|}
+  $$
+  \item $H_L$ measures the entropy per letter of the language $L$
+  \begin{itemize}
+  	\item A random language would have entropy $\log_2 |\mathcal P|$
+  	\item The quantity $R_L$ measures the fraction of ``excess characters'' which we think of as redundancy
+  \end{itemize}
+  \item $C^n$ is defined to be a random variable representing an $n$ gram of ciphertext
+  \item Given $y \in C^n$ define
+  \begin{equation*}
+    K(y) = \{K \in \mathcal K \mid \exists x \in \mathcal P^n \text{ such that } Pr[x] > 0 \text{ and } E_K(x) = y\}
+  \end{equation*}
+  \begin{itemize}
+    \item This means that $K(y)$ is the set of keys $K$ for which $y$ is the encryption of a meaningful string of plaintext of length n
+  	\item If $y$ is the observed string of ciphertext then the number of \textbf{spurious keys} is $|K(y)| -1$
+    \item The average number of spurious keys of length $n$ is denoted by $\bar {s_n}$ and can be computed as
+    \begin{equation*}
+      \bar s_n = \sum_{y \in \mathcal C^n} Pr[y]|K(y)| -1
+    \end{equation*}
+  \end{itemize}
+  \item \textbf{Theorem} Suppose $(\mathcal P, \mathcal C, \mathcal K, \mathcal E, \mathcal D)$ is a cryptosystem where $|\mathcal{C}|=|\mathcal{P}|$ and keys are chosen equiprobaly. Let $R_{L}$ denote the redundancy of the underlying language. Then given a string of ciphertext of length $n,$ where $n$ is sufficiently large, the expected number of spurious keys, $\bar{s}_{n}$, satisfies
+  $$
+    \bar{s}_{n} \geq \frac{|\mathcal K|}{|\mathcal{P}|^{n R_{L}}}-1
+  $$
+  \item The quantity approaches 0 exponentially quickly as $n$ increases
+  \begin{itemize}
+  	\item It may not be a good estimate for small values of $n$
+  \end{itemize}
+  \item \textbf{Definition} The unicity distance of a cryptosytem is defined to be the value of $n$, denoted by $n_{0}$, at which the expected number of spurious keys becomes zero; i.e., the average amount of ciphertext required for an opponent to be able to uniquely compute the key, given enough computing time.
+  \begin{itemize}
+  \item The following is an estimate for the unicity distance
+  \begin{equation*}
+    n_0 \approx \frac{\log_2 |\mathcal K|}{R_L \log_2 | \mathcal P|}
+  \end{equation*}
+  \end{itemize}
+\end{itemize}
+
+\subsection{Product Cryptosystems}
+\begin{itemize}
+  \item Cryptosystem for which $\mathcal C = \mathcal P$ is used
+  \begin{itemize}
+  	\item This is called an \textbf{endomorphic cryptosystem}
+  \end{itemize}
+  \item Given $S_1 = (\mathcal P, \mathcal P, \mathcal K_1, \mathcal E_1, \mathcal D_1)$ and $S_2 = (\mathcal P, \mathcal P, \mathcal K_1, \mathcal E_1, \mathcal D_1)$ of endomorphic cryptosystems, then the \textbf{product cryptosystem} of $S_1 \times S_2$ is defined to be the cryptosystem
+  \begin{equation*}
+    (\mathcal P, \mathcal P, \mathcal K_1 \times \mathcal K_2, \mathcal E_1, \mathcal D_1)
+  \end{equation*}
+  \item The key of the product cryptosystem has the form $K=(K_1, K_2)$ where $K_1 \in \mathcal K_1$ and $K_2 \in \mathcal K_2$
+  \item The encryption and decryption of the resulting cryptosystem are defined as follows
+  \begin{equation*}
+    E_{(K_1, K_2)}(x) = = E_{K_2}(E_{K_1}(x))
+  \end{equation*}
+  \item The decryption rule is defined by the formula
+  \begin{equation*}
+    D_{(K_1,K_2)}(y) = D_{K_1}(D_{K_2}(y))
+  \end{equation*} 
+  \item \textbf{Multiplicative Cipher} Let $\mathcal{P}=\mathrm{C}=\mathbb{Z}_{26}$ and let
+  $$
+    x=\left\{a \in \mathbb{Z}_{26} \mid \operatorname{gcd}(a, 26)=1\right\}
+  $$
+  For $a \in \mathcal{K}$ define
+  $$
+    E_a(x) = ax \text{ mod } 26
+  $$  
+  and
+  $$
+    D_a(x) = a^{-1} y \text{ mod } 26
+  $$
+  for $x,y \in \mathbb Z_{26}$ 
+  \item The probability distribution of the keyspace $\mathcal K$ of the product cryptosystem is defined in the following way:
+  \begin{equation*}
+    Pr[(K_1, K_2)] = Pr[K_1] \cdot Pr[K_2]
+  \end{equation*}
+  \item The product operation is always associative i.e. $(S_1 \times S_2) \times S_3 = S_1 \times (S_2 \times S_3)$
+  \item If we take the product of an (endomorphic) cryptosystem $S$ with itself we obtain $S^2$
+  \begin{itemize}
+  	\item An $n$ fold product is denoted $S^n$
+  \end{itemize}
+  \item A cryptosystem is idempotent if $S^2 = S$
+  \begin{itemize}
+  	\item e.g. Shift, Substitution, Affine, Hill Vigenere and Permutation ciphers
+  	\item When this is the case the resulting system does not provide additional security
+  \end{itemize}
+  \item If a cryptosystem it is not idempotent, then there is a potential for rise in security by iterating several times
+  \begin{itemize}
+  	\item This is used in the Data Encryption Standard which consists of 16 iterations
+  \end{itemize}
+
+\end{itemize}
+
+\newpage 
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "crypto-noter"
+%%% End:

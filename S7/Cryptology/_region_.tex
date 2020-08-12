@@ -1,0 +1,138 @@
+\message{ !name(crypto-noter.tex)}\documentclass[a4, english]{article}
+
+%Import from a relative path
+\usepackage{import}
+\import{/home/martin/Repos/LaTeX-Preamble/}{preamble_dk.tex}
+
+\settitle{Noter}{Cryptology}
+\addauth{Martin Nørskov Jensen}{201610882@post.au.dk}{au553262}
+
+\begin{document}
+
+\message{ !name(question1.tex) !offset(-12) }
+\section{Information Theory and Cryptography} 
+\begin{itemize}
+  \item \textbf{Computational security} 
+  \begin{itemize}
+    \item It should not be possible to break in a given reasonable time previous
+    \item Often defined for some large number
+  \end{itemize}
+  \item \textbf{Provable security} 
+  \begin{itemize}
+  	\item One should prove that break the cryptosystem is at hard as solving some other NP-complete problem
+  	\item Does not give the absolute proof of the computation difficulty of the problem
+  \end{itemize}
+  \item \textbf{Unconditional security}
+  \begin{itemize}
+	  \item It is unconditionally secure if it cannot be solved even with unlimited computing power
+  \end{itemize}
+\end{itemize}
+
+\subsection{Perfect secrecy}
+\begin{itemize}
+	\item It is assumed that a cryptosystem is specified and a particular key $K \in \mathcal K$ is used for only one encryption
+  \item A distribution is given the plaintext space $\mathcal P$ and defines a random variable $X$
+  \begin{itemize}
+  	\item The probability that $x$ is chosen is $\text{Pr}[X=x]$
+  \end{itemize}
+  \item The key $k$ is chosen from a fixed probability (uniformly)
+  \begin{itemize}
+  	\item The key also defines a random variable denoted $K$
+  	\item The probability that $k$ is chosen is $\text{Pr}[K=k]$
+  \end{itemize}
+  \item The key and plaintext are independent random variables
+  \item The two probability distribution on $X$ and $P$ induces a probability distribution on $\mathcal C$ called $Y$
+  \item $C(K)$ represents the set of possible ciphertexts if $K$ is the key.
+  \begin{equation*}
+    C(K) = \{E_K(x) \mid x \in \mathcal P\}
+  \end{equation*}
+  \item For every $y \in \mathcal C$ we have that 
+  \begin{equation*}
+    \text{Pr}[Y=y] = \sum_{\{K \mid y \in C (K)\}} \text{Pr}[K=k] Pr[X = D_K(y)]
+  \end{equation*}
+  \item The condition probability $Pr[Y=y \mid X=x]$ i.e. the probability that $y$ is the ciphertext, given that $x$ is the plaintext is the following
+  \begin{equation*}
+    Pr[Y=y \mid X = x] = \sum_{K \mid x = d_K (y)} Pr[K=k]
+  \end{equation*} 
+  \item Using Bayes's theorem the probability that $x$ is the plaintext can be computed:
+  \begin{equation*}
+    Pr[X=x \mid Y = y] = \frac{Pr[X=x] \cdot \sum_{K \mid x = d_K (y)} Pr[K=k]}{\sum_{\{K \mid y \in C (K)\}} Pr[K=k] Pr[X = D_K(y)]} 
+  \end{equation*}
+  \item \textbf{Definition} A cryptosystem has perfect secrecy if 
+  \begin{equation*}
+    Pr[x \mid y] = Pr [x]
+  \end{equation*}
+  for all $x \in \mathcal P, y \in \mathcal C$
+  \item \textbf{Theorem} If the 26 keys in the shift cipher are used with equal probability. Then for any plaintext distribution the Shift Cipher has perfect secrecy
+  \begin{itemize}
+	  \item The Shift Cipher is unbreakable given that a new random key is used to encrypt every plaintext character
+  \end{itemize}
+  \item \textbf{Theorem} Given a cryptosystem where $|\mathcal K| = | \mathcal C| = |\mathcal P|$. The cryptosystem provides perfect secrecy if and only if every key is used with equal probability $1/|\mathcal K$ and every $x \in \mathcal P$ and every $y \in \mathcal C$ there is a unique key such that $E_K(x) = y$
+  \begin{proof} 
+    TODO 
+  \end{proof}
+\end{itemize}
+
+\subsection{Entropy}
+\begin{itemize}
+  \item \textbf{Definition} Suppose $X$ is a discrete random variable which takes values from a finite set $S$. Then the \textbf{entropy} of the random variable $X$ is defined to be the quantity
+  \begin{equation*}
+    H(X) = -\sum_{x \in S} Pr [x] \log_2 Pr[x]
+  \end{equation*}
+  \item If $|S| =n$ and $Pr[x] = \frac{1}{n}$ for all $x \in S$ then $H(X) = \log_2 n$
+  \begin{itemize}
+	  \item $H(X) \geq 0$ for any random variable $X$
+  	\item $H(X)=0$ if and only if $Pr[x_0]= 1$ for some $x_0$ and $Pr[x] = 0$ for all $x \neq x_0$
+  \end{itemize}
+  \item One can compute the entropy of random variables $K$ for the keyspace $\mathcal K$, $P$ for the plaintext space $\mathcal P$ and $C$ for the ciphertext space $\mathcal C$
+  \item \textbf{Definition} A real-valued function $f$ is a concave function on an interval $I$ if
+  \[
+    f\left(\frac{x+y}{2}\right) \geq \frac{f(x)+f(y)}{2}
+  \]
+  for all $x, y \in I$. $f$ is a strictly concave function on an interval $I$ if
+  \[
+    f\left(\frac{x+y}{2}\right)>\frac{f(x)+f(y)}{2}
+  \]
+  for all $x, y \in I, x \neq y .$
+  \item \textbf{Theorem (Jensen's inequality)} Suppose $f$ is a continuous strictly concave function on the interval $I$. Suppose further that
+  $$
+    \sum_{i=1}^{n} a_{i}=1
+  $$
+  and $a_{i}>0,1 \leq i \leq n$. Then
+  $$
+    \sum_{i=1}^{n} a_{i} f\left(x_{i}\right) \leq f\left(\sum_{i=1}^{n} a_{i} x_{i}\right)
+  $$
+  where $x_{i} \in I, 1 \leq i \leq n .$ Further, equality occurs if and only if $x_{1}=\cdots=x_{n}$
+  \item \textbf{Theorem} Suppose $X$ is a random variable having a probability distribution which takes on the values $p_{1}, p_{2}, \ldots, p_{n},$ where $p_{i}>0,1 \leq i \leq n$. Then $H(\mathbf{X}) \leq \log _{2} n,$ with equality if and only if $p_{i}=1 / n, 1 \leq i \leq n$.
+  \item \textbf{Theorem} $H(X,Y) \leq H(X) + H(Y)$ with equality if and only if $X$ and $Y$ are independent variables
+  \item \textbf{Definition} Suppose $X$ and $Y$ are two randon variables. Then for any fixed value $y$ of $Y$, we get a (conditional) probability distribution on $X$. We denote the associated random variable by $X | y .$ Clearly,
+  $$
+    H(\mathbf{X} | y)=-\sum_{x} \operatorname{Pr}[x | y] \log _{2} \operatorname{Pr}[x | y]
+  $$
+  We define the conditional entropy, denoted $H(X | Y),$ to be the weighted average (with respect to the probabilities $\text{Pr}[y])$ of the entropies $H(\mathbf{X} | y)$ over all possible values $y .$ It is computed to be
+  $$
+    H (\mathbf{X} | \mathbf{Y})=-\sum_{y} \sum_{x} \operatorname{Pr}[y] \mathbf{P r}[x | y] \log _{2} \operatorname{Pr}[x | y]
+  $$
+  The conditional entropy measures the average amount of information about
+that is not revealed by $\mathbf{Y} .$
+\end{itemize}
+
+\subsection{Product Cryptosystems}
+\begin{itemize}
+	\item TODO
+\end{itemize}
+
+\newpage 
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "crypto-noter"
+%%% End:
+
+\message{ !name(crypto-noter.tex) !offset(-110) }
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

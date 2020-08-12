@@ -1,0 +1,263 @@
+\section{Actively secure MPC}
+
+\subsection{$\F_{\COM}$ definition}
+\begin{itemize}
+  \item It is assumed that each player $\P_i$ can commit to a value $a \in \mathbb F$ while keeping the choice secret which they might choose to reveal later
+
+  \item Commitments are modelled by assuming an ideal functionality $\FCOM$
+  \begin{itemize}
+  	\item To commit, one simply sends $a$ to $\FCOM$, which will keep $a$ until $\P_i$ asks to have it revealed
+ 		\item Formally it is assumed that $\FCOM$ is equipped with commands \texttt{commit} and \texttt{open} as described in the box
+  \end{itemize}
+
+	\item The implementation of $\FCOM$ requires that all honest players take part actively 
+  \begin{itemize}
+    \item It is required that all honest players in a given round send the same commands to $\FCOM$ in order for the command to be executed
+  \end{itemize}
+
+	\item $\FCOM$ will do a complete breakdown if
+  \begin{itemize}
+		\item It is not used as intended by the honest parties
+		\item An honest party commits under the same $cid$ twice
+		\item An honest party use the same $cid_3$ twice in an addition or a multiplication command
+		\item The honest parties use some $cid_1$ or $cid_2$ that has not been defined yet
+  \end{itemize}
+
+	\item The following convention is used for specifying $\FCOM$
+  \begin{itemize}
+		\item When a command gives a particular output, then this output is not delivered immediately.
+    \begin{itemize}
+			\item It will be specified via $\mathtt{COM}.\mathtt{infl}$ in which round to deliver, and in that round, the output to all parties will be given
+    \end{itemize}
+		\item If a party $\P_i$ is corrupted in between a command given to $\FCOM$ and the output delivery round, then it is allowed that the input of $\P_i$ to the command is changed via $\COM.\infl$ and the outputs will be recomputed accordingly
+		\item When a command leaks a value, then the value is output on $\COM.\leak$ in the round where inputs to the commands are given, not in the delivery round
+  \end{itemize}
+
+	\item The final part of the description of $\FCOM$ includes to \textbf{advanced manipulation} commands
+  \begin{itemize}
+		\item The \texttt{transfer} command transfer a committed value $a$ from a party $\P_i$ to another $\P_j$
+    \begin{itemize}
+			 \item Equivalent to the $P_j$ having committed to $a$ where $\P_i$ knows the value of $a$
+    \end{itemize}
+		\item The \texttt{mult} command is used by a player to create, given the commitments to $a_1$ and $a_2$ a new commitment that is guaranteed to contain $a_1a_2$
+  \end{itemize}
+
+	\item The symbol $\commit{\cdot}{i}$ denoted a variable in which $\FCOM$ keeps a committed value received from player $\P_i$
+  \begin{itemize}
+		\item $\commit{a}{i}$ means that player $\P_i$ have committed to $a$
+  \end{itemize}
+
+	\item The following notation is used as a shorthand for commands
+  \begin{itemize}
+		\item $\commit{a}{i} \leftarrow a$: the \texttt{commit} command is executed to let $\P_i$ commit to $a$
+		\item $\commit{a}{i} \Leftarrow a$: the \texttt{pubcommit} command is used to force $\P_i$ commit to $a$
+		\item $a \leftarrow \commit{a}{i}$: the \texttt{open} command is executed to let all parties learn $a$
+		\item $(\P_j)a \leftarrow \commit{a}{i}$: the designated \texttt{open} command is executed to let $\P_j$ learn $a$
+		\item $\commit{a}{j} \leftarrow \commit{a}{i}$: the \texttt{transfer} command from $\P_i$ to $\P_j$
+		\item $\commit{a_3}{i} \leftarrow \commit{a_1}{i}\commit{a_2}{i}$: the \texttt{mult} command
+		\item $\commit{a_3}{i} \leftarrow \commit{a_1}{i} + \commit{a_2}{i}$: the \texttt{add} command
+		\item $\commit{a_3}{i} \leftarrow \alpha\commit{a_2}{i}$: the \texttt{mult} command
+  \end{itemize}
+
+	\item One can ask $\FCOM$ to manipulate committed values as long as the involved variables belong to the same party
+
+  \item The advanced manipulation commands can be implemented from the basic set of operations i.e. given a functionality $\F_{\COM-\mathtt{SIMPLE}}$ that has all the commands of $\FCOM$ except the advanced manipulation commands one can build protocols that will implement $\FCOM$ when given access to $\F_{\COM-\mathtt{SIMPLE}}$
+\end{itemize}
+
+\subsection{Implementations of the transfer command}
+\begin{protocol}{Protocol Transfer}{transfer}
+  If any command fails in steps 1-3, then either $P_i$ or $P_j$ is corrupt and in this case go to step 4
+  \begin{enumerate}
+  	\item $(P_j)a \leftarrow \commit{a}{i}$
+    \item $\commit{a}{j} \leftarrow a$
+    \item For $k=1, \dots, n$ do
+    \begin{enumerate}
+    	\item $P_i$ picks a uniformly random $r \in_R \F$ and sends it privately to $P_j$
+      \item Execute $\commit{r}{i} \leftarrow r$ and $\commit{r}{j} \leftarrow r$
+      \item $P_k$ broadcasts a random challenge $e \in \F$
+      \item The parties execute $\commit{s}{i} \leftarrow e \commit{a}{i} + \commit{r}{i}$ and $\commit{s}{j}  \leftarrow e \commit{a}{j} + \commit{r}{j}$
+      \item $s \leftarrow \commit{s}{i}$ and $s' \leftarrow \commit{s}{j}$
+      \item If $s \neq s'$, all players goto step 4
+    \end{enumerate}
+    If all $n$ iterations of the loop were successful, parties output \texttt{success}, except $\P_j$, who outputs $a$
+    \item The ``exception handler'' only executed if either $\P_j$ or $\P_i$ is corrupt:
+    \begin{enumerate}
+      \item Execute $a \leftarrow \commit{a}{i}$. If this fails, all parties output \texttt{fail} otherwise, do $\commit{a}{j} \Leftarrow a$.
+      \item Parties output \texttt{success}, except $\P_j$, who outputs $a$
+    \end{enumerate}
+  \end{enumerate}
+\end{protocol}
+
+\begin{protocol}{Protocol Perfect Transfer}{perfect-transfer}
+  If any command fails in steps 1-4, then either $\P_i$ or $\P_j$ is corrupt. In this case, go to step 5
+  \begin{enumerate}
+    \item $(\P_j)a \leftarrow \commit{a}{i}$
+    \item $\commit{a}{j} \leftarrow a$
+    \item To check that $\P_i$ and $\P_j$ are committed to the same value the following is done:
+    \begin{enumerate}
+    	\item $\P_i$ selects a polynomial $f(\X) = a + \alpha_1 \X + \cdots + \alpha_t \X^t$ for uniformly random $\alpha_1, \dots, \alpha_t \in_R \mathbb F$ 
+      \item All players compute for $k=1, \dots n$,
+      \[
+        \commit{f(k)}{i} = \commit{a}{i} + k \commit{\alpha_1}{i} + \cdots + k^t \commit{\alpha_t}{i}
+      \]
+      using the \texttt{add} and \texttt{mult} commands
+      \item  $(P_k)f(k) \leftarrow \commit{f(k)}{i}$
+      \item $\P_i$ sends $\alpha_1, \dots, \alpha_t$ privately to $P$ 
+      \item Execute $\commit{\alpha_l}{j} \leftarrow \alpha_l$ for $l=1,\dots,t$ the same way as earlier
+      \item Compute $\commit{f(k)}{j}$ and execute $(\P_k)f(k) \leftarrow \commit{f(k)}{j}$
+    \end{enumerate}
+    \item For $k=1, \dots,n$, $\P_k$ compares the two values that were opened toward him and if they agree, he broadcasts \texttt{accepts}; otherwise, he broadcasts \texttt{reject}
+    \item This is the ``exception handler'' this is executed if it is known that $\P_j$ or $\P_i$ is corrupt:
+    \begin{enumerate}
+    	\item $a \leftarrow \commit{a}{i}$ if this fails all parties output \texttt{fail} otherwise $\commit{a}{j} \Leftarrow a$ 
+      \item Parties output \texttt{success} except $\P_j$ who outputs $a$
+    \end{enumerate}
+  \end{enumerate}
+\end{protocol}
+
+\begin{itemize}
+  \item \textbf{Protocol Transfer} (\autoref{prot:transfer}) is only statistically secure for any $t < n$
+  \begin{itemize}
+  	\item It assumes that $1/|\mathbb{F}|$ is negligible in the security parameter and if not the step 2 is repeated $u$ times such that $(1/|\mathbb{F})^u$ is negligible.
+  \end{itemize}
+  \item \textbf{Protocol Perfect Transfer} (\autoref{prot:perfect-transfer}) is perfectly secure but requires $t < n/2$
+  \item The idea behind the protocols is that party $\P_i$ reveals to party $\P_j$ and $P_j$ commits to this. Then they prove to the other parties that what the have committed to are then same
+
+\end{itemize}
+
+\subsection{Implementations of the mult command}
+\begin{protocol}{Protocol Commitment Multiplication}{commit-mult}
+  If any command used udring this protocol fails, all players output \texttt{fail}
+  \begin{enumerate}
+  	\item $\P_i$: $\commit{c}{i} \leftarrow ab$.
+    \item For $k=1,\dots,n$ do
+    \begin{enumerate}
+    	\item $\P_i$ choose a uniformly random $\alpha \in_R \mathbb F$
+      \item $\commit{\alpha}{i}$; $\commit{\gamma}{i} \leftarrow \alpha b$.
+      \item $\P_k$ broadcasts a uniformly random challenge $e \in_R \mathbb F$
+      \item $\commit{A}{i} \leftarrow e \commit{a}{i} + \commit{\alpha}{i}$; $A \leftarrow \commit{A}{i}$
+      \item $\commit{D}{i} \leftarrow A \commit{b}{i} - e \commit{c}{i} - \commit{\gamma}{i}$; $D \leftarrow \commit{D}{i}$.
+      \item If $D \neq 0$, all players output \texttt{fail}
+    \end{enumerate}
+  \item If this step is used, no command failed during the protocol i.e. all the $D$ values were $0$ and all players output \texttt{success}.
+  \end{enumerate}
+\end{protocol}
+
+\begin{protocol}{Protocol Perfect Commitment Multiplication}{commit-mult-perf}
+  If any command used during this protocol fails, all players output \texttt{fail}
+  \begin{enumerate}
+  	\item $\commit{c}{i} \leftarrow ab$
+    \item $\P_i$ chooses polynomials $f_a(\X) = a + \alpha_1 \X + \cdots + \alpha_tX^t$ and $f_b(\X) = b + \beta_1 \X + \cdots + \beta_tX^t$ for random $\alpha_j, \beta_j \in_R \mathbb F$. He or she computes $h(\X)=f_a(\X)f_b(\X)$ and writes $h(\X)$ as $h(\X) = c + \gamma_1 \X + \cdots + \gamma_{2t} \X^{2t}$. Then establish commitments as follows
+    \begin{align*}
+      \commit{\alpha_j}i &\leftarrow \alpha_j \quad \text{for } j=1, \dots, t \\
+      \commit{\beta_j}i &\leftarrow \beta_j \quad \text{for } j=1, \dots, t \\
+      \commit{\gamma_j}i &\leftarrow \gamma_j \quad \text{for } j=1, \dots, 2t
+    \end{align*}
+    \item The \texttt{add} and \texttt{mult} commands are invoked to compute, for $k=1 ,\dots, n$,
+    \begin{align*} 
+      \commit{f_a(k)}i &= \commit{a}i + k \commit{\alpha_1}i + \cdots + k^t \commit{\alpha_t}i \\
+      \commit{f_b(k)}i &= \commit{b}i + k \commit{\beta_1}i + \cdots + k^t \commit{\beta_t}i \\
+      \commit{h(k)}i &= \commit{c}i + k \commit{\gamma_1}i + \cdots + k^{2t} \commit{\gamma_{2t}}i
+    \end{align*} 
+    Then $(P_k)a_k \leftarrow \commit{f_a(k)}i$, $(\P_k)b_k \leftarrow \commit{f_b(k)}i$ and $(\P_k)c_k \leftarrow \commit{h(k)}i$ are executed
+    \item For $k=1, \dots,n$, do: $\P_k$ checks that $a_kb_k = c_k$ and broadcasts \texttt{accept} if this is the case; otherwise he broadcast \texttt{reject}
+    \item For each $\P_k$ who said \texttt{reject}, do $a_k \leftarrow \commit{f_a(k)}i$, $b_k \leftarrow \commit{f_b(k)}i$, and $c_k \leftarrow \commit{h(k)}i$; all players check whether $a_kb_k = c_k$ holds. If this is not the case, all players output \texttt{fail}.
+    \item If we arrive here, no command failed during the protocol, and thus all relations $a_kb_k = c_k$ that were checked hold. All players output \texttt{success}.
+
+  \end{enumerate}
+\end{protocol}
+
+\begin{itemize}
+  \item \textbf{Protocol Commitment Multiplication} (\autoref{prot:commit-mult}) is secure for any $t < n$
+  \begin{itemize}
+  	\item It assumes that $1/|\mathbb{F}|$ is negligible in the security parameter and if not the step 2 is repeated $u$ times such that $(1/|\mathbb{F})^u$ is negligible.
+  \end{itemize}
+  \item \textbf{Protocol Perfect Commitment Multiplication} (\autoref{prot:commit-mult-perf}) is secure for any $t < n/3$
+  \item The idea in Protocol Commitment Multiplication is that $\P_i$ commits to what he or she claims is the product $ab$ and the proves to each other player $\P_k$ that this was done correctly
+  \begin{itemize}
+  	\item If $c = ab + \Delta$ for $\Delta \neq 0$ then for each $\P_k$ the proof fails except with probability $1/|\mathbb F|$
+  \end{itemize}
+
+  \item The idea in Protocol Perfect Commitment Multiplication is to have $\P_i$ commit to polynomials $f_a,f_b$ and to what it claims is the product $h=f_af_b$ of the polynomials
+  \begin{itemize}
+  	\item The players check that $h(k) = f_a(k)f_b(k)$ in a number of points sufficient to guarantee that $h=f_af_b$
+  \end{itemize}
+
+  \item Let $\pi_{\mathtt{TRANSFER},\mathtt{MULT}}$ be the protocol that
+  \begin{itemize}
+  	\item Implements the basic commands by simply relaying the commands to $\F_{\mathtt{COM-SIMPLE}}$
+  	\item Implements the transfer and multiplication commands by running Protocol Transfer and Protocol Commitment Multiplication on $\F_{\mathtt{COM-SIMPLE}}$
+  \end{itemize}
+
+  \item Let $\pi_{\mathtt{PTRANSFER},\mathtt{PMULT}}$ be the protocol that
+  \begin{itemize}
+  	\item Implements the basic commands by simply relaying the commands to $\F_{\mathtt{COM-SIMPLE}}$
+  	\item Implements the transfer and multiplication commands by running Protocol Perfect Transfer and Protocol Perfect Commitment Multiplication on $\F_{\mathtt{COM-SIMPLE}}$
+  \end{itemize}
+\end{itemize}
+\begin{protocol}{Agent $\mathcal S_{\COM}$}{s-com}
+  A simulator for $\pi_{\mathtt{PTRANSFER},\mathtt{PMULT}} \diamond \F_{\mathtt{SC}} \diamond \F_{\mathtt{COM-SIMPLE}}$ for the static case
+  \begin{itemize}
+  	\item \textbf{Basic commands:}
+    \begin{itemize}
+      \item When any of the basic commands are executed, the simulator will just forward messages back and forth between the environment and $\FCOM$
+      \item When a corrupted players commits to a value, $\mathcal{S}_{\COM}$ will store it.
+    \end{itemize}
+  	\item \textbf{Transfer:} When $\FCOM$ is executing a \texttt{transfer} of some value $a$ from $\P_i$ to $\P_j$, then $\P_i$ has already committed to that values
+    \begin{itemize}
+    	\item If $\P_i$ is corrupted, the simulator has already stored $a$ and if $\P_j$ is corrupted, then $a$ is leaked from $\FCOM$ as soon as \texttt{transfer} is initiated
+      \begin{itemize}
+        \item $\mathcal{S}_\COM$ can run its copy of $\pi_{\texttt{PTRANSFER}} \diamond \F_{\texttt{SC}} \diamond \F_{\texttt{COM-SIMPLE}}$ with the environment using as input the correct value $a$ and where it simulates the parts of the honest players. 
+      \end{itemize}
+      \item If both parties are honest, the transfer protocol is simulated with some random values
+      \item If the simulated protocol terminates correctly, the simulator inputs $(\texttt{transfer}, i, cid, j)$ and ask for delivery of outputs on $\COM.\texttt{infl}$.
+      \item If $\P_i$ is corrupt and makes some command fail, the simulator will ask for delivery of outputs without inputting $(\texttt{transfer},i,cid,j)$ which will make $\FCOM$ output \texttt{fail}. 
+    \end{itemize}
+  	\item \textbf{Multiplication:} When $\FCOM$ is executing a \texttt{mult} for $\P_i$ of some values $a,b$, then $\P_i$ has already committed to these values
+    \begin{itemize}
+    	\item If $\P_i$ is corrupted, the simulated has already stored all values needed and can do $\pi_{\texttt{PMULT}} \diamond \F_{\texttt{SC}} \diamond \F_{\texttt{COM-SIMPLE}}$ with the correct values.
+      \item If $\P_i$ is honest $\pi_{\texttt{PMULT}} \diamond \F_{\texttt{SC}} \diamond \F_{\texttt{COM-SIMPLE}}$ is done with random values.
+      \item If the simulated protocol terminates correctly, the simulator inputs $(\texttt{mult},i,cid_1,cid_2,cid_3)$ and asks for delivery of outputs on $\COM.\texttt{infl}$.
+      \item If $\P_i$ is corrupted and makes some command fail, the simulator will ask for delivery of outputs on $\COM.\infl$ without inputting a command, which will make the $\FCOM$ output fail
+    \end{itemize}
+  \end{itemize}
+\end{protocol}
+\begin{itemize}
+  \item \textbf{Theorem 5.1} Let $\F_{\mathtt{COM-SIMPLE}}$ be a functionality that has all the commands of $\F_{\mathtt{COM}}$ except the advanced manipulation commands. Then $\pi_{\mathtt{TRANSFER}, \mathtt{MULT}} \diamond \F_{\mathtt{SC}} \diamond \F_{\mathtt{COM-SIMPLE}}$ implements $\FCOM$ in $\Env^{t,sync}$ with statistical security for all $t <n$. Moreover $\pi_{\mathtt{PTRANSFER}, \mathtt{PMULT}} \diamond \F_{\mathtt{SC}} \diamond \F_{\mathtt{COM-SIMPLE}}$ implements $\FCOM$ in $\Env^{t,sync}$ with perfect security for all $t < n/3$.
+  \begin{proof} 
+    It is proven in the case for perfect security. 
+    \begin{itemize}
+      \item The simulator $\mathcal{S}_\COM$ is constructed (\autoref{prot:s-com}). The idea is that the simulator will relay messages relayed to the basic commitment commands, while for \texttt{transfer} and \texttt{mult}, it will run internally a copy of $\pi_{\texttt{PTRANSFER},\texttt{PMULT}} \diamond \F_{\texttt{SC}}, \F_{\texttt{COM-SIMPLE}}$ where the instance of $\F_{\texttt{COM-SIMPLE}}$ is used for executing basic commitment commands related to executing $\pi_{\texttt{PTRANSFER}, \texttt{PMULT}}$
+      \item The simulator will play the roles of the honest parties 
+      \item The messages concerning the basic commands are just relayed and thus for these commands the distribution is identical
+      \item During \texttt{transfer}, if either $\P_i$ or $\P_j$ is corrupted the simulator learn the value to be transfer (similarly in \texttt{mult} for $\P_i$). Hence in these cases, the protocol $\pi_{\texttt{PTRANSFER},\texttt{PMULT}}$ is run on the true values
+      \item If the players are honest then for both \texttt{transfer} and \texttt{mult}, the environment sees at most $t$ points of polynomials of degree at least $t$ and thus no information on the actual values is given
+    \end{itemize}
+    What remains to be argued is that the protocol execution is consistent with the inputs-outputs to and from $\FCOM$ i.e. if the protocol finishes successfully, then the output is correct and if the protocol fails this is also consistent with the state of $\FCOM$
+    \begin{itemize}
+    	\item During \texttt{transfer}
+      \begin{itemize}
+        \item If $\P_i$ and $\P_j$ are honest, then it is clear that all the proofs will be accepting
+        \item If one or both are corrupted and we still reach the point where values are compared, no command failed earlier, At this point there are strictly more than $2t$ honest players and if at most $t$ players said reject, then at least $t+1$ honest players said accept and thus $\P_i$ and $\P_j$ are committed to the same polynomial (which means that they are committed to the same value)
+      \end{itemize}
+      \item For \texttt{mult} 
+      \begin{itemize}
+      	\item Even if $\P_i$ is corrupt it must be the case that 
+        \[
+          f_a(0) = a, f_b(0) = b, h(0) = c \text{ and } \deg(f_a),\deg(f_b) \leq t, \deg(h) \leq 2t
+        \]
+        \item If the players output \texttt{success} at the end it follows that $f_a(k)f_b(k) = h(k)$ for every player $\P_k$ who remains honest
+        \item The assumption that $t < n/3$ implies that there are at least $2t+1$ honest players and thus they determine a degree of at most $2t$ uniquely which means that $f_a(\X)f_b(\X) = h(\X)$ and thus $ab = f_a(0)f_b(0) = h(0) = c$
+        \item One can also clearly see that if $\P_i$ remains honest the protocol will always be successful
+      \end{itemize}
+      \item If the simulated protocol fails at some point because of a corrupted $\P_i$, the simulator outputs \texttt{fail} which is consistent with the internal state of $\FCOM$ since in this case $\mathcal{S}_\COM$ also makes $\FCOM$ fail
+    \end{itemize}
+  \end{proof}
+\end{itemize}
+
+\newpage
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "cpt-noter"
+%%% End:

@@ -1,0 +1,185 @@
+\section{Public-key Crypto based on Factoring}
+\input{public-key-definition}
+\subsection{RSA}
+\subsubsection{Definition}
+\begin{itemize}
+  \item RSA key generation works as follows
+  \begin{itemize}
+  	\item On input (even) security parameter $k$, choose random $k/2$ bit primes $p$, $q$ and set $n = pq$
+  	\item Select a number $e \in \mathbb Z^*_{(p-1)(q-1)}$ and $d = e^{-1} \text{ mod } (p-1)(q-1)$
+  	\item Output public key $pk = (n,e)$ and secret key $sk = (n,d)$
+  \end{itemize}
+  \item For RSA it is always the case that $\mathcal P = \mathcal C = \mathbb Z_n$
+  \item RSA encryption works as follows
+  \[
+    E_{(n,e)}(x) = x^e \text{ mod } n 
+  \]
+  \item RSA decryption works as follows
+  \[
+    D_{(n,d)}(y) = y^d \text{ mod } n
+  \]
+\end{itemize}
+
+
+\subsection{Security of public key cryptosystems}
+\subsubsection{Definition}
+\begin{itemize}
+  \item Secure deterministic public key cryptosystems are also called \textbf{families of trapdoor one-way functions}
+  \item \textbf{Definition 7.1} A probability $\epsilon(k)$ the depends on natural number $k$ is said to be \textbf{negligible} if it holds that for any polynomial $p$, we have $\epsilon(k) \leq 1/p(k)$ for large enough $k$ i.e. it vanishes to zero very quickly
+
+  \item \textbf{Definition 7.2} A system $(G,E,D)$ forms a \textbf{family of trapdoor one-way functions} if the following is satisfied:
+  \begin{itemize}
+  	\item The algorithms $(G,E,D)$ define a public-key cryptosystem according to definition 7.1.
+    \begin{itemize}
+  		\item They all run in time polynomial in the security parameter $k$
+  		\item They algorithm $E$ is deterministic
+    \end{itemize}
+  	\item Let any probabilistic polynomial time algorithm $A$ be given. Consider the following experiment:
+    \begin{enumerate}
+  		\item Run $G$ on input $k$ where $(pk,sk)$ is the output
+  		\item Select $x$ at random in the set of plaintext $\mathcal P$
+  		\item Run $A$ on input $pk, E_{pk}(x)$
+  		\item Let $p(A,k)$ be the probability that $A$ outputs $x$
+  		\item $p(A,k)$ should be negligible in $k$ for any $A$
+    \end{enumerate}
+  \end{itemize}
+
+  \item \textbf{RSA assumption:} the basic RSA algorithm defines a family of trapdoor one-way functions
+
+  \item \textbf{Definition 7.3} $(G,E,D)$ is CPA (semantically) secure if for all probabilistic polynomial time adversaries $A$, it holds that $Adv_A(O_{real}, O_{ideal})$ is negible in $k$ for the following two cases
+  \begin{itemize}
+  	\item \textbf{The ideal world:}
+    \begin{enumerate}
+  		\item Input to both the adversary $A$ and oracle $O_{Ideal}$ is the security parameter $k$
+  		\item The oracle runs $G(k)$ to get $(pk,sk)$ and gives $pk$ to $A$
+  		\item $A$ computes a plaintext $x \in \mathcal P$ and gives it to $O$
+  		\item The oracle responds with $E_{pk}(r)$ where $r$ in randomly chosen in $\mathcal P$ of the same length as $x$
+  		\item $A$ output a bit $b$
+    \end{enumerate}
+  	\item \textbf{The real world:}
+    \begin{enumerate}
+  		\item Input to both the adversary $A$ and oracle $O_{Real}$ is the security parameter $k$
+  		\item The oracle runs $G(k)$ to get $(pk,sk)$ and gives $pk$ to $A$
+  		\item $A$ computes a plaintext $x \in \mathcal P$ and gives it to $O$
+  		\item The oracle responds with $E_{pk}(x)$ 
+  		\item $A$ output a bit $b$
+    \end{enumerate}
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Probabilistic cryptosystem based on RSA (PCRSA)}
+\begin{itemize}
+  \item PCRSA
+  \begin{itemize}
+  	\item \textbf{Key Generation} Generates a pair of RSA keys $(n,e), (n,d)$ in the useal way
+    \begin{itemize}
+  		\item The set of messages is just $\{0,1\}$ where
+  		\item The set of ciphertext is $\mathcal Z_n^*$
+    \end{itemize}
+  	\item \textbf{Encryption} A bit $b$ is encrypted by choosing a random number $x_b \in \mathbb Z_n^*$ such that the lease significant bit of $x_b$ is $b$
+    \begin{itemize}
+  		\item The ciphertext is now $c = x_b^e \text{ mod } n$
+    \end{itemize}
+  	\item \textbf{Decryption} Compute $x_b = c^d \text{ mod } n$ and extract the lease significant bit
+  \end{itemize}
+  \item PCRSA could be extend to encrypt $O(\log(k))$ bits at once and still be secure
+  \item \textbf{Theorem 7.4} Under the RSA assumption, PCRSA is CPA secure
+  \item \textbf{Theorem 7.5} Given an algorithm that computes the function $P$
+  \[
+    P(y) = P(x^e \text{ mod } n ) = \text{lsb}(x)
+  \]
+  correctly on every input, there exists an algorithm that on input $n,e,y$ computes $x$ such that $x^e \text{ mod } n = y$ in polynomial time, using $O(k)$ calls to $P$, where $k$ is the bit length of $n$ \smallskip \\
+  \textbf{Proof}
+  \begin{itemize}
+  	\item Let $H(y)$ be the following function
+    \[
+    H(y) = H(x^e \md n) =
+    \begin{cases} 
+      0 & \text{if } 0 \leq x < n/2 \\
+      1 & \text{otherwise}
+    \end{cases}
+    \]
+    \item If one can compute $P(y)$ then can compute $H(y)$ efficiently and vice versa as follows
+    \[
+      H(y) = P(2^ey \md n) = P((2x)^e \md n) 
+    \]
+    since if $0 \leq x < n/2$ then $2x \md n = 2x$ which is even and otherwise $2x \md n = 2x - n$ which is uneven.
+    \item One can use $H(y)$ to do find the plaintext $x$ by during binary search. $H(y)$ tells us whether $0 \leq x < n/2$ or $n/2 \leq x \leq  n-1$. Then $H(2^ey \md n) = H(2x)^e \text{ mod } n$ will tell whether $0 \leq x < n/2$ or $n/4 < x < n/2$ and so on
+    \item The following is an algorithm that finds the plain text using $H$ that takes $y,n,e$ as input and set $k = \floor{\log_2(n)}$ (TODO fix)
+    \begin{enumerate}
+    	\item For $i=0$ to $k$ do $h_{i}=H(y), y=2^{e} y \bmod n$ $l o=0, h i=n$
+      \item For $i=0$ to $k$ do
+      \begin{itemize}
+        \item $\operatorname{mid}=(h i+l o) / 2$
+        \item if $h_{i}=1$ then $l o=m i d$ else $h i=m i d .$
+      \end{itemize}
+      \item Return $\floor{hi}$
+    \end{enumerate}
+      
+  \end{itemize}
+  \item \textbf{Theorem 7.6} If a family of one-way trapdoor permutations exists, then there exists a CPA-secure public key system \smallskip \\
+\end{itemize}
+
+\subsubsection{Chosen Ciphertext Security}
+\begin{itemize}
+  \item \textbf{Definition 7.7} $(G,E,D)$ is chosen ciphertext CCA-secure, if for all probabilistic polynomial time adversaries $A$, it holds that $Adv_A(O_{Real},O_{Ideal})$ is negligible in $k$ for the following two cases
+  \begin{itemize}
+  	\item \textbf{The ideal world:} Input to both adversary $A$ and oracle $O_{Ideal}$ is security parameter $k$.
+    \begin{enumerate}
+  		\item The oracle runs $G(k)$ to get $(pk,sk)$ and gives $pk$ to $A$
+  		\item $A$ may submit an input string $y$ to $O_{Ideal}$ and $O_{Ideal}$ will return $D_{sk}(y)$ to $A$
+      \begin{itemize}
+  			\item This is repeated as many times as $A$ wants
+      \end{itemize}
+  		\item $A$ computes a plain $x \in \mathcal P$ and give it to $O$
+      \begin{itemize}
+  			\item The oracle responds with $y_0 = E_{pk}(r)$, where $r$ is randomly chosen in $\mathcal P$ of the same length as $x$
+      \end{itemize}
+  		\item $A$ may submit an input string $y$ for $y \neq y_0$ to $O_{Ideal}$ and $O_{Ideal}$ will return $D_{sk}(y)$ to $A$
+      \begin{itemize}
+  			\item This is repeated as many times as $A$ wants
+      \end{itemize}
+  		\item $A$ outputs a bit $b$
+    \end{enumerate}
+  	\item \textbf{The real world:} Input to both adversary $A$ and oracle $O_{Ideal}$ is security parameter $k$.
+    \begin{enumerate}
+  		\item The oracle runs $G(k)$ to get $(pk,sk)$ and gives $pk$ to $A$
+  		\item $A$ may submit an input string $y$ to $O_{Real}$ and $O_{Real}$ will return $D_{sk}(y)$ to $A$
+      \begin{itemize}
+  			\item This is repeated as many times as $A$ wants
+      \end{itemize}
+  		\item $A$ computes a plain $x \in \mathcal P$ and give it to $O$
+      \begin{itemize}
+  			\item The oracle responds with $y_0 = E_{pk}(x)$
+      \end{itemize}
+  		\item $A$ may submit an input string $y$ for $y \neq y_0$ to $O_{Real}$ and $O_{Real}$ will return $D_{sk}(y)$ to $A$
+      \begin{itemize}
+  			\item This is repeated as many times as $A$ wants
+      \end{itemize}
+  		\item $A$ outputs a bit $b$
+    \end{enumerate}
+  \end{itemize}
+  \item \textbf{Theorem 7.8} If there exists a family of trapdoor one-way permutation, then there exists a chosen ciphertext secure probabilistic public-key system
+  \begin{itemize}
+    \item To construct a chosen ciphertext CCA-secure system one typically restricts the area of legal ciphertexts	
+  \end{itemize}
+  \item OAEP-based encryption 
+  \begin{enumerate}
+  	\item Choose $r \in \{0,1\}^{k_0}$ at random
+    \item Compute 
+    \begin{align*}
+      s &= G(r) \oplus (m \mid \mid 0^{k_1}) \\
+      t &= H(s) \oplus r \\
+      w &= s \mid \mid t
+    \end{align*}
+    \item Let the ciphertext be $E_{pk}(w)$ 
+  \end{enumerate} 
+  \item OAEP-based encryption is ciphertext CCA-secure in the random oracle model	
+\end{itemize}
+
+\newpage
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "crypto-noter"
+%%% End:

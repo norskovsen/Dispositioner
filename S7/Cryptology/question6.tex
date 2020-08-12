@@ -1,0 +1,181 @@
+\section{Digital Signature Schemes}
+\subsection{Definition}
+\begin{itemize}
+  \item An \textbf{Digital Signature System} $(G,S,V)$ is defined by
+  \begin{itemize}
+  	\item $G$ (probabilistic key generation algorithm)
+    \begin{itemize}
+  		\item Gets a security parameter $k$ as input
+  		\item Produces as output a pair of keys $(pk, sk)$
+    \end{itemize}
+  	\item $A$ (authentication algorithm)
+    \begin{itemize}
+  		\item Gets as input a message $m$ and the secret key $sk$
+  		\item Produces a signature $S_{sk}(m)$
+    \end{itemize}
+  	\item $V$ (verification algorithm)
+    \begin{itemize}
+  		\item Gets as input a signature $s$, a message $m$ and public key $pk$
+  		\item Outputs $V_{pk}(s,m)$ which is equal to \textbf{accept} or \textbf{reject}
+  		\item It must be the case that $V_{pk}(A_{sk}(m),m) = accept$
+    \end{itemize}
+  \end{itemize}
+
+  \item The security parameter can be thought of as a measures of the amount of security we are after
+  \begin{itemize}
+  	\item i.e. the larger $k$ the more secure the keys are
+  	\item All algorithms should be efficient i.e. polynomial time in $k$
+  \end{itemize}
+  \item \textbf{Definition 11.1 (Security for Signature Schemes)} A signature scheme is CMA-secure if for any probabilistic polynomial time adversary $E$, $Adv_{E}(k)$ negligible as a function of $k$ where $Adv_{E}(k)$ is defined for the following game:
+  \begin{itemize}
+  	\item The oracle runs $G$ on input $k$ to get $sk,pk$
+  	\item $pk$ is given to the adversary $E$ and $sk$ is kept inside the oracle
+  	\item The adversary can submit as many messages as he wants and for each message $m$ he will get $S_{sk}(m)$ back
+  	\item The adversary wins the game if he produces $m_0,s_0$ such that
+    \begin{itemize}
+  		\item $m_0$ is not one of the messages the oracle was asked to sign
+  		\item $V_{pk}(s_0,m_0) = accept$
+    \end{itemize}
+  	\item The probability that $E$ wins is a function of the security parameter $k$ as is called $Adv_{E}(k)$
+  \end{itemize}
+\end{itemize}
+
+\subsection{Signature scheme based on RSA}
+\begin{itemize}
+  \item Given a hash function generator $\mathcal H$ and RSA a signature scheme can be defined as follows:
+  \begin{itemize}
+  	\item \textbf{Key generation}:
+    \begin{itemize}
+  		\item Run standard RSA key generation on input $k$ to get $((n,e),(n,d))$
+  		\item Run $\mathcal H(k)$ to get a hash function $h$
+  		\item It is assumed that one can generate $h$ such that $Im(h) = \mathbb Z_n$
+      \begin{itemize}
+  			\item called a full domain hash
+      \end{itemize}
+  		\item Output $(pk,sk) = ((n,e,h),(n,d,h))$
+  		\item The message space is $\{0,1\}^*$
+    \end{itemize}
+  	\item \textbf{Signing} The signature on message $m$ is 
+    \[
+      S_{sk}(m)=(h(m))^d \text{ mod } n
+    \]
+  	\item \textbf{Verification} Given message and signature $(m,s)$ check that 
+    \[
+      s^e \text{ mod } n = h(m)
+    \]
+  \end{itemize}
+
+  \item \textbf{Theorem 11.2 (Security of Full Domain Hash)} If the hash function used in Full Domain Hash is modelled as a random oracle, then under the RSA assumption, Full Domain Hash is CMA secure
+
+\end{itemize}
+
+\subsection{The Schnorr signature scheme}
+\begin{itemize}
+  \item The signature scheme
+  \begin{itemize}
+  	\item \textbf{Key generation}
+    \begin{itemize}
+  		\item An algorithm $\mathcal K$ is assumed that on input $k$ will output a prime $p$, a $k$ prime $q$ such that $q \mid (p-1)$ and $\alpha \in \mathbb Z_p^*$ of order $q$
+  		\item Run hash function generation $\mathcal H(k)$ to get hash function $h$ that maps to $\mathbb Z_q$
+  		\item Choose $a \in \mathbb Z_q$ at random
+  		\item Output $pk = (p,q, \alpha, \beta = \alpha^a \text{ mod } p)$ and $sk = a$
+    \end{itemize}
+  	\item \textbf{Signing} On input message $m$ and $pk,sk$
+    \begin{itemize}
+  		\item Choose $r \in \mathbb Z_q$ at random
+  		\item Set $c = \alpha^r \text{ mod } p$
+  		\item Output the signature $(e,z) = h(m), (r + ea) \text{ mod } q)$
+    \end{itemize}
+  	\item \textbf{Verification} On input message $m$, signature $(e,z)$ and $pk$
+    \begin{itemize}
+  		\item Set $c = \alpha^z \beta^{-e} \text{ mod } p$
+  		\item Check that $e = h(c,m)$
+      \begin{itemize}
+  			\item Accept if this is the case
+  			\item Reject otherwise
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+
+  \item The algorithm $\mathcal K$ will choose the prime $q$ first and repeat choosing $s$ at random until $p = 2sq + 1$ is prime
+  \begin{itemize}
+  	\item $s$ needs to be large enough so that $p$ has the right size
+  	\item Choose $\alpha_0$ to be a generator of $\mathbb Z_p^*$ and set $\alpha = a_0^{(p-1/q)} \text{ mod } p$
+  	\item $p$ should be at least around 2000 bits while $q$ can be about 300 bits
+  \end{itemize}
+
+  \item \textbf{Lemma 11.3} If $h$ is modelled as a random oracle, then given a probabilistic polynomial time algorithm that breaks CMA security of the Schnoor signature scheme, one can build a probabilistic polynomial time algorithm that computes $a$ from $\alpha ^a \text{ mod } p$ 
+\end{itemize}
+
+\subsection{Combining Signatures and Hashing in general}
+\begin{itemize}
+  \item Given signature scheme $\Sigma$ and hash function generator $\mathcal H$ a new scheme $\Sigma'$ can be defined as follows:
+  \begin{itemize}
+  	\item To generate keys
+    \begin{itemize}
+  		\item Make keys for $\Sigma$ by running $G$
+  		\item Run $\mathcal H$ to get $h$ where it is assumed that $h$ maps to the plaintext space defined by $\Sigma$
+  		\item $h$ is included in the public key of $\Sigma '$
+    \end{itemize}
+  	\item One can sign any bit string $m$ in the combined scheme $\sigma'$ by first computing $h(m)$ and then the signature $A_{s k}(h(m))$
+  \end{itemize}
+
+  \item \textbf{Theorem 11.4} If $\mathcal H$ is collision intractable and $\Sigma$ is secure, then $\Sigma'$ is secure
+  \begin{itemize}
+  	\item It is essential the $h$ and $(sk,pk)$ are chosen independently at random
+  \end{itemize}
+  \textbf{Proof}
+  \begin{itemize}
+  	\item It is assumed that there is an enemy $E'$ that breaks $\Sigma'$ under a chosen message attack
+    \item An algorithm $E$ gets as input 
+    \begin{itemize}
+      \item A hash function $h$
+      \item A public key $pk$ from $\Sigma$
+      \item An oracle $O$ that on input a message $x$ returns the $\Sigma$-signature $A_{sk}(x)$ where $sk$ is the secret key corresponding to $pk$
+    \end{itemize}
+    i.e. $E$ gets to do a chosen message attack on $\Sigma$
+    \item $E$ does the following
+    \begin{itemize}
+      \item It stats $E'$ on input $pk,h$
+      \item When $E'$ makes an oracle call, i.e. it wants the $\Sigma'$ signature on message $m$, this is handled by computing $h(m)$, calling $O$ on input $h(m)$ and returning to $E'$ the result $A_{sk}(h(m))$
+      \item When $E'$ outputs a message $m_0$ and a signature $s_0$, $E$ also outputs these value plus the set of messages $M$ for which $E'$ made oracle calls
+    \end{itemize}
+    \item Since $E'$ is successful with a large probability means that there is a good change that $m_0 \notin M$ and that $s_0$ is a valid $\Sigma$-signature on $h(m_0)$
+    \item Given that this happens either $h(m_0) \in h(M)$ or $h(m_0) \notin h(M)$ which means that at least one of these cases will occur with non-negligible probability
+    \begin{enumerate}
+    	\item If $h(m_0) \notin h(M)$ then a $\Sigma$ signature has been forced on a new message $h(m_0)$
+    	\item If $h(m_0) \notin h(M)$ then a collision has been found for $h$
+    \end{enumerate}
+    This gives a contradiction with at least one of the assumptions in the theorem
+  \end{itemize}
+\end{itemize}
+
+\subsection{Dealing with replay attacks}
+\begin{itemize}
+  \item A simple way to deal with replay attacks is to make sure that the sender never sends the same message twice e.g. by appending a sequence number to what should be authenticated
+  \begin{itemize}
+  	\item It is hardly a practical solution since the sequence number quickly gets to large
+  	\item To deal with lost message one can check that the sequence number is $\geq n$ message
+  \end{itemize}
+
+  \item One can also append a timestamp to message
+  \begin{itemize}
+  	\item The receiver should check the time stamp to ensure that it is not too far from his own time
+  \end{itemize}
+
+  \item One may use interaction
+  \begin{itemize}
+  	\item The receiver first send a number $R$ to the sender
+    \begin{itemize}
+  	  \item This number can be chosen at random or be a sequence number
+    \end{itemize}
+  	\item The sender sends the message plus a MAC computed over the message and $R$ which will prevent replay
+  \end{itemize}
+\end{itemize}
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "crypto-noter"
+%%% End:

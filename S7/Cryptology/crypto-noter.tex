@@ -1,0 +1,33 @@
+\documentclass[a4, english]{article}
+
+%Import from a relative path
+\usepackage{import}
+\import{/home/martin/Repos/LaTeX-Preamble/}{preamble_en.tex}
+
+\settitle{Noter}{Cryptology}
+\addauth{Martin Nørskov Jensen}{201610882@post.au.dk}{au553262}
+
+\newcommand{\pr}[1]{\text{Pr}}
+\newcommand{\md}{\text{ mod }}
+\newcommand{\cg}[1]{(\text{mod } #1)}
+
+\begin{document}
+
+\maketitle
+\newpage 
+\tableofcontents 
+
+\newpage
+
+\input{question1}
+\input{question2}
+\input{question3}
+\input{question4}
+\input{question5}
+\input{question6}
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

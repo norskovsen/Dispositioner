@@ -1,0 +1,99 @@
+\section{Applications of Randomization}
+\subsection{Nearest Neighbor Search Definition}
+\begin{itemize}
+  \item A point $p$ is a $R$ \textbf{near neighbor} of a point $q$ if the distance between $p$ and $q$ is at most $R$
+  \item \textbf{Randomized c-approximate $R$ near neighbor:} 
+  \begin{itemize}
+	  \item Given a set $P$ of points in a $d$ dimension space $\mathbb R^d$ and parameters $R > 0$, $\delta > 0$ and a distance function $\text{dist} : \R^d \times \R^d \to \R$
+	  \item Constructs a data structure such that given any query point $q$, if there exists an $R$ near neighbor of $q$ in $P$ it reports some $cR$ near neighbor of $q$ in $P$ with probability at least $1- \delta$
+  \end{itemize}
+  \item The probability of success can be amplified by building and querying several instances of the data structure
+  \item \textbf{Locality-sensitive hashing} A family $\mathcal H$ is called $(R, cR, P_1, P_2)$ sensitive if for any two points $p,q \in \mathbb R^d$
+  \begin{itemize}
+  	\item if $\|p-q \| \leq R$ then $\Pr[h(q) = h(p)] \geq P_1$ 
+  	\item if $\|p-q \| \geq cR$ then $\Pr[h(q) = h(p)] \leq P_2$
+  \end{itemize}
+  \item For a (LSH) family to be useful, it has to satisfy $P_1 > P_2$
+\end{itemize}
+
+\subsection{Algorithm}
+\begin{itemize}
+  \item The availability of a family of hash functions $\mathcal H$ that is $(R, cR, P_1, P_2)$ sensitive for dist is assumed.
+  \begin{itemize}
+	  \item The functions in $\mathcal H$ maps from $\mathbb R^d$ to bit strings of some fixed length $w$
+  \end{itemize}
+  \item The preprocessing of the point set $P$ is as follows if it is assumed that $\delta = 1/2$
+  \begin{enumerate}
+  	\item Set parameters $k = \lg_{P_2}(1/n)$ and $L = \lg_{1-P_1^k}(1/8)$ for simplicity $k$ and $L$ are assumed to be integers
+    \item For $i = 1, \dots, L$: 
+    \begin{enumerate}
+    	\item Pick $k$ hash functions $h_{i,1}, \dots, h_{i,k}$ independently from $\mathcal H$ and form the combined hash functions $g_i=(h_{i,1}, \dots, h_{i,k})$ mapping points in $\R^d$ to $\{0,1\}^{wk}$. Store the hash functions $g_i$
+      \item Create a hash table $H_i$ mapping keys in $\{0,1\}^{wk}$ to linked lists. $H_i[g_i(p)]$ is used to denote the linked list corresponding to the key $g_i(p)$
+      \item For each point $p \in P$, compute $g_i(p)$ and add $p$ to the linked list $H_i[g_i(p)]$
+    \end{enumerate}
+  \end{enumerate}
+  \item To answer a query $q \in \R^d$ the following is done
+  \begin{enumerate}
+  	\item For $i= 1, \dots, L$
+    \begin{enumerate}
+    	\item Scan through the list $H_i(g_i(q))$ and for each point $p$ in the list, compute $\text{dist}(p,q)$. If $\text{dist(p,q)} \leq cR$ return $p$ and terminate
+      \item If at any point more than $3L$ points $p$ have been scanned abort
+    \end{enumerate}
+  \end{enumerate}
+  \item If it takes $O(d)$ time to compute $\text{dist}(p,q)$ and $t$ time to evaluate simple hash functions $h \in \mathcal H$, the worst case query time is $O(L(d + tk))$
+  \item The total space usage is $O(nd + Ln)$ where 
+  \begin{itemize}
+  	\item $O(nd)$ comes from storing the input
+  	\item $O(Ln)$ comes from storing the pointers in the hash tables $H_i$
+  \end{itemize}
+  \item To obtain a data structure when correctness must be $1-\delta$ for arbitrary $\delta$ make $\lg(1/\delta)$ copies of the above data structure
+  \begin{itemize}
+  	\item On a query $q$ query all $\lg(1/\delta)$ copies
+  	\item If one of the succeds in finding a $cR$ near neighbor then the query is answered correctly
+  	\item The final query time becomes $O(L(d+t k) \lg (1 / \delta))$ and the final space usage becomes $O(n d+L n \lg (1 / \delta))$
+  \end{itemize}
+\end{itemize}
+
+\subsection{Analysis}
+\begin{itemize}
+	\item Proof that the data structure with $k= \lg_{P_2}(1/n)$ and $L = \lg_{1-P_1^k}(1/8)$ answers a query correctly with probability at least $1/2$
+  \item Two events $E_1$ and $E_2$ are considered of which at least one must happen for the data structure to fail reporting a $cR$-near neighbor
+  \item For the data structure to fail there must be an $R$-near neighbor $p$ of $q$
+  \item Let the event $E_1$ be that $g_i(q) \neq g_i(p)$ for all $i=1, \dots, L$ for a $R$-near neighbor $p$ of $q$
+  \item Let the event $E_2$ be that $\sum_{i=1}^L | \{p \in P \mid g_i(p) = g_i(q) \land \text{dist}(p,q) > cR\} | > 3L$
+  \item Since if neither $E_1$ or $E_2$ happen the query is successful all that we need to argue that $\Pr[E_1 \cup E_2] \leq 1/2$ using the union bound
+  \item First $\Pr[E_1]$ is bound
+  \begin{itemize}
+  	\item Since $\mathcal H$ is $(R,cR, P_1, P_2)$-sensitive it must be the case for all $i$ that $\Pr[g_i(p)=g_i(q)] \geq P_1^k$
+    \item Thus $\Pr[g_i(p) \neq g_i(q)] \leq 1-P_1^k$
+    \item By independence it must be the case that $\Pr[\forall i: g_i(p) \neq g_i(q)] \leq (1-P_1^k)^L$
+    \item By the choice of $L$ the following holds $\Pr[E_2] \leq 1/8$
+  \end{itemize}
+  \item Then $\Pr[E_2]$ is bound using Markov inequality
+  \begin{itemize}
+  	\item Let $P' \subseteq P$ be the subset of points $p \in P$ with $\text{dist}(p,q) > cR$
+    \item Let $X_{p,i}$ be the indicator random variable with the value $1$ if $g_i(p) = g_i(q)$ and $0$ otherwise
+    \item Then $\sum_{i=1}^L | \{p \in P \mid g_i(p) = g_i(q) \land \text{dist}(p,q) > cR\} | = \sum_{i=1}^L \sum_{p \in P'}X_{p,i}$
+    \item Using this the expectation can be bound as follows:
+    \begin{align*}
+      \mathbb E[\sum_{i=1}^L \sum_{p \in P'} X_{p,i}] &\leq \sum_{i=1}^L \sum_{p \in P'} \mathbb E[X_{p,i}] 
+       \text{ (linearity of expectation)}\\
+                                                 &= \sum_{i=1}^L \sum_{p \in P'} \Pr[g_i(p) = g_i(q)] \\
+                                                 &\leq \sum_{i=1}^L \sum_{p \in P'} P_2^k \\
+                                                 &= \sum_{i=1}^L \sum_{p \in P'} 1/n \\
+                                                 &= L|P'|/n \leq L \\
+    \end{align*}
+    \item Thus by Markovs inequality it must be the case that $\Pr[E_2] < 1/3$
+  \end{itemize}
+  \item Thus the probability that the algorithm fails must be 
+  \[
+    \Pr[E_1 \cup E_2] \leq \Pr[E_1] + \Pr[E_2] \leq 1/8 + 1/3 = 11/24 < 1/2
+  \]
+\end{itemize}
+
+\newpage
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "ra-noter"
+%%% End:

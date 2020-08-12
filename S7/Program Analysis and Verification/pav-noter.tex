@@ -1,0 +1,71 @@
+\documentclass[a4, english]{article}
+
+%Import from a relative path
+\usepackage{import}
+\import{/home/martin/Repos/LaTeX-Preamble/}{preamble_en.tex}
+
+\settitle{Notes}{Program Analysis and Verification}
+\addauth{Martin Nørskov Jensen}{201610882@post.au.dk}{au553262}
+
+\usepackage{ebproof}
+
+% logic 
+\newcommand{\co}[1]{\left\llbracket#1\right\rrbracket}
+\newcommand{\True}{\text{True}}
+\newcommand{\False}{\text{False}}
+\newcommand{\magics}{- \hspace{-2px}* \hspace{2px} }
+\newcommand{\magic}{- \hspace{-5px}* \hspace{2px} }
+\newcommand{\append}{\dashv \hspace{-4pt}\vdash}
+\newcommand{\later}{\triangleright}
+\newcommand{\upd}{ | \hspace{-5px} \Rrightarrow}
+
+% code
+\newcommand{\true}{\text{true}}
+\newcommand{\false}{\text{false}}
+\newcommand{\ilet}{\text{let}}
+\newcommand{\icas}{\text{cas}}
+\newcommand{\iref}{\text{ref}}
+\newcommand{\irec}{\text{rec}}
+\newcommand{\iin}{\text{in}}
+\newcommand{\iif}{\text{if}}
+\newcommand{\ielse}{\text{else}}
+\newcommand{\ithen}{\text{then}}
+\newcommand{\Val}{\text{Val}}
+\newcommand{\Prop}{\text{Prop}}
+\newcommand{\Key}{\text{K}}
+\newcommand{\pointsto}{\hookrightarrow}
+
+% Invariants and ghost state
+\usepackage{dashbox}
+\setlength{\fboxsep}{0.3em}
+\newcommand\dboxed[1]{\dbox{\ensuremath{#1}}}
+\newcommand\inv[1]{\fbox{\ensuremath{#1}}}
+
+% Authoritative Resource Algebra
+\newcommand\auth{{\ensuremath\bullet}}
+\newcommand\prt{{\ensuremath\circ}}
+
+
+\begin{document}
+
+\maketitle
+\newpage 
+\tableofcontents 
+
+\newpage
+
+\input{question1.tex}
+\input{question2.tex}
+\input{question3.tex}
+\input{question4.tex}
+\input{question5.tex}
+\input{question6.tex}
+\input{question7.tex}
+\input{question8.tex}
+\input{question9.tex}
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
