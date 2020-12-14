@@ -1,0 +1,288 @@
+\section{Protocols with trusted dealer}
+\begin{itemize}
+    \item We want to compute a function $f(x,y)$ securely between two parties $\A$ and $\B$ where $f$ is defined as 
+    \begin{equation*}
+        f : \{0,1\}^n \times \{0,1\}^n \to \{0,1\}
+    \end{equation*}
+    \item $\A$ knows $x$ and $\B$ know $y$
+    \item $\A$ should only learn $z = f(x,y)$ from running the protocol
+    \item In the ideal world we have a trusted party $T$ which is given the input $x$ and $y$ and computes the function $f(x,y) = z$ 
+    \begin{itemize}
+        \item Secure by definition (if the party $p$ can be trusted)
+        \item A lot of trust is put in $p$ since it knows all the information
+    \end{itemize}
+    \item \textbf{Privacy by simulation:} A protocol can be proven secure if there exists a simulator $\Sim$ which takes as input $x$ and the output $z$ and produces the view $\view_\A$ of $\A$ and likewise for $\B$ with its input
+        \begin{itemize}
+            \item This implies that the parties learn nothing from running the protocol besides the output.
+        \end{itemize}
+    \item \textbf{Passive security} is where the protocol is secure in the case where both $\A$ and $\B$ follows the protocol:
+    \begin{itemize}
+        \item An adversary controls at most one of the parties and then follows the protocol 
+        \item It may try and learn more information than allowed by looking at the transcript of the messages that it received and its state
+        \item Proven secure by using Privacy by Simulation
+    \end{itemize}
+    \item \textbf{Active security} is where the protocol is still secure in the case where $\A$ or $\B$ does not follow the protocol
+    \begin{itemize}
+        \item In the ideal case the adversary is allowed to abort the execution of the protocol or obtain the output of the protocol without the honest party knowing
+        \item It is proven secure by constructing a simulator $\mathcal S$ that can simulate protocol in the ideal case for each polynomial adversary $\mathcal A$ in the real case
+    \end{itemize}
+    \item The described protocols uses a trusted dealer $D$ which computes some random values $r_\A$ and $r_\B$ with some correlation and sends then to $\A$ and $\B$ which using these values computes the result $z = f(x,y)$
+    \begin{itemize}
+        \item Less trust is needed in $D$ that the trusted party $T$ from the ideal case since it does not learn any information about the input the of the two parties and not even the output
+        \item If $\A$ or $\B$ and $D$ colludes the protocol becomes insecure, since we know that two party secure function evaluation is impossible in the general case
+    \end{itemize}
+\end{itemize}
+
+\subsection{One-time truth-tables}%
+\subsubsection{Passive secure protocol}
+\begin{itemize}
+    \item The function is represented by a trust table $T \in \{0,1\}^{2^n \times 2^n}$ where $T[i,j] = f(i,j)$ 
+    \item \textbf{The dealer:} The dealer $D$ performs the following operations:
+    \begin{enumerate}
+        \item Choose two shifts $r \in_R \{0,1\}^n$ and $s \in_R \{0,1\}^n$
+        \item Choose a matrix $M_B \in \{0,1\}^{2^n \times 2^n}$ uniformly at random
+        \item Compute a matrix $M_A$ such that
+        \begin{equation*}
+            M_A [i,j] = M_B [i,j] \oplus T[i-r \mod 2^n, j-s \mod 2^n]
+        \end{equation*}
+    \item Output $(r, M_A)$ to $A$ and $(s, M_B)$ to $\B$
+    \end{enumerate}
+    \item \textbf{The protocol:} Having received $(r, M_\A)$ and $(s, M_\B)$ from $D$, $\A$ and $\B$ with input $x$ and $y$:
+    \begin{itemize}
+        \item $\A$ computes $u = x+r \mod 2^n$ and sends it to $\B$
+        \item $\B$ computes $v = y+s \mod 2^n$ and $z_\B = M_B[u,v]$ and sends $(v, z_\B)$ to $\A$
+        \item $\A$ outputs $z = M_\A[u,v] \oplus z_\B$ which is correct by construction:
+        \begin{equation*}
+            z = M_\A[u,v] \oplus z_\B = M_\A[u,v] \oplus M_\B[u,v] = T[u-r, v-s] = T[x,y]A = f(x,y)
+        \end{equation*}
+    \end{itemize}
+    \item The views of the protocols are
+    \begin{align*}
+        \view_\A &= \{x, (r, M_\A, (v, z_\B))\} \\
+        \view_\B &= \{y, (s, M_\B), u\}
+    \end{align*}
+    \item The simulator for $\A$ works as follows
+    \begin{enumerate}
+        \item The simulator gets as input $x \in \{0,1\}^n$ and $z \in \{0,1\}$
+        \item Sample uniformly at random $z_\B \in \{0,1\}$, a random $v \in \{0,1\}^n$ and a random $r \in \{0,1\}^n$
+        \item Construct a matrix $M_A$ by defining $M_A[x+r, v] = z \oplus z_\B$ and for $(i,j) \neq (x+r, v)$, choose $M_\A[i,j] \in_R \{0,1\}$ 
+    \end{enumerate}
+    The simulator for $\A$ has the same distribution as in the real case since
+    \begin{itemize}
+        \item $r$ and $v$ and $M_A[i,j]$ are all chosen uniformly at random
+        \item The pairs $(M_A[u,v], z_\B)$ is in both cases random values such that $M_A[u,v] \oplus z_\B = z$
+        \item It does not matter in which order the random elements are sampled before they are revealed
+    \end{itemize}
+    \item The simulator $\Sim_\B$ for $\B$ works as follows
+    \begin{enumerate}
+        \item The simulator gets as input $y \in \{0,1\}^n$ 
+        \item Choose $u \in_R \{0,1\}^n$, $s \in_R \{0,1\}^n$
+        \item Generate a matrix $M_\B$ by choosing $M_\B[i,j] \in_R \{0,1\}$ for each $(i,j)$ in the matrix
+    \end{enumerate}
+    The simulator for $\B$ has the same distribution as in the real case since in both cases all the value seen by $\B$ are random values except for $y$
+    \item The OTTT protocol has the following properties:
+    \begin{itemize}
+        \item[\checkmark] Perfect security
+        \item[\checkmark] Optimal round complexity
+        \item[\checkmark] Optimal communication complexity a total of $2n+1$ bits
+        \begin{itemize}
+            \item One cannot go below $2n$ for interesting functions 
+        \end{itemize}
+        \item[\cross]The protocol only works for inputs of very small size since the protocols space complexity is exponential in the input size $n$
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Active attacks}
+\begin{enumerate}
+    \item \textbf{$\B$ sends the wrong value $v'$:} Instead for sending the value $v = y + s$, $\B$ sends an arbritary message $v' \in \{0,1\}^n$
+    \begin{itemize}
+        \item Since $\B$ knows $y$ and $s$ this can always be rewritten as 
+        \begin{equation*}
+            v' = y + s + (v' - y + s) = y + s + err = (y + err) + s = y' +s
+        \end{equation*}
+        \item This is a case of \textbf{input substitution} and is tolerated in the setting of active security
+    \end{itemize}
+    \item \textbf{$\B$ sends nothing / an invalid message:} this can happen if $\B$ never sends a message or if $\B$ sends a message pair which is not in the right format 
+    \begin{itemize}
+        \item The first condition can be fixed by having a synchronous channel and the second can efficiently be checked by $\A$
+        \item $\B$ learns nothing since the string from $\A$ is a uniformly random string
+        \item $\B$ never learns the output of the protocol
+        \item If this happens $\A$ can use some default value $y_0$ and computing $z = f(x, y_0)$
+        \item It can be seen as a more convoluted version of input substitution
+    \end{itemize}
+    \item \textbf{$\B$ sends a wrong value $z_\B'$:} since $z_\B'$ is a bit it must be the case that $\B$ sends $z_\B' = z_\B \oplus 1$ and thus $\A$ output
+    \begin{equation*}
+        z' = z \oplus 1 = f(x,y) \oplus 1
+    \end{equation*}
+    This breaks the correctness of the protocol since if the protocol evaluates a function
+    \begin{equation*}
+        f(x,y) = 0 \forall x,y
+    \end{equation*}
+    the real case would be able to find an input which outputs $1$ where as the simulator would not be able to do this
+\end{enumerate}    
+
+\subsubsection{Active Secure Protocol}
+\begin{itemize}
+    \item To make the OTTT protocol a MAC scheme $(\Gen, \Tag, Ver)$ is used 
+    \begin{itemize}
+        \item $\Gen$ produces a MAC key $k$ 
+        \item $\Tag$ and a MAC key $k$ can be used to compute tags on messages $t = \Tag(k,x)$
+        \item $\Ver(k, t, x)$ outputs \texttt{accept} if $t$ is a valid tag on $x$ with key $k$ or \texttt{reject} otherwise
+    \end{itemize}
+    \item \textbf{The dealer:} The dealer $D$ performs the following operations:
+    \begin{enumerate}
+        \item Choose two shifts $r \in_R \{0,1\}^n$ and $s \in_R \{0,1\}^n$
+        \item Choose a matrix $M_B \in \{0,1\}^{2^n \times 2^n}$ uniformly at random
+        \item Compute a matrix $M_A$ such that
+        \begin{equation*}
+            M_A [i,j] = M_B [i,j] \oplus T[i-r \mod 2^n, j-s \mod 2^n]
+        \end{equation*}
+    \item \hl{Generate $2^{2n}$ keys for a $(1, \epsilon)$-secure MAC define $\forall i,j \in \{0,1\}^n$ define $K[i,j] \leftarrow \Gen()$}
+    \item \hl{Generate MACs for all values in $M_b$ i.e. $\forall i,j \in \{0,1\}^n$ define $T[i,j] \leftarrow \Tag(K[i,j], M_B[i,j])$}
+    \item Output $(r, M_A, $ \hl{$K$}$)$ to $A$ and $(s, M_B,$\hl{$T$}$)$ to $\B$
+    \end{enumerate}
+    \item \textbf{The protocol:} Having received $(r, M_A, $ \hl{$K$}$)$ and $(s, M_B,$\hl{$T$}$)$ from $D$, $\A$ and $\B$ with input $x$ and $y$:
+    \begin{itemize}
+        \item $\A$ computes $u = x+r \mod 2^n$ and sends it to $\B$
+        \item $\B$ computes $v = y+s \mod 2^n$, $z_\B = M_B[u,v]$ and \hl{$t_\B = T[u,v]$} sends $(v, z_\B,$ \hl{$t_\B$} $)$ to $\A$
+        \item \hl{If $\Ver(K[u,v], t_\B, z_\B) = \mathtt{reject}$ or no valid message is received $\A$ outputs $z=f(x, y_0$))} else $\A$ outputs $z = M_\A[u,v] \oplus z_\B$
+    \end{itemize}
+    \item The protocol is shown secure by constructing a simulator such that the views the ideal case and the real case is indistinguishable where $\B$ is corrupt and $\A$ is honest
+    \begin{itemize}
+        \item The statement is of the form: assuming that the MAC scheme is secure, then the enhanced OTT protocol is secure
+        \item The simulator works in the following way
+        \begin{enumerate}
+            \item Sample random $s$, $M_\B$ generate keys $K$ for the MAC scheme and compute MACs $T= \Tag(k, M_\B)$ and send $(s, M_\B, T)$ to $\B$
+            \item Sample a random $u$ and send it to $\B$
+            \item If Bob does not output anything or output is an invalid message output a triple $(v', z_\B', t_\B')$ such that $z'_\B \neq M_\B[u,v]$ the simulator inputs $y_0$ to the ideal functionality
+            \item Else the simulator inputs $y' = v'-s$ to the ideal functionality
+        \end{enumerate}
+        \item The distribution is analysed as follows
+        \begin{itemize}
+            \item The view of Bob is distributed identically in the simulator and in the real protocol
+            \item $M_\B, r$ are chosen uniformly at random in both experiments
+            \item $u$ is computed as $x+r$ in the real protocol and as a uniform random value in the value which gives the same distribution
+            \item The output of $\A$ is identically distributed in the two worlds except for the case where the corrupted $\B$ outputs a triple such that $\Ver(K[u,v], t_\B', z_\B') = \texttt{accept}$ and $z_\B \neq M_\B[u,v]$
+            \item Real world Alice outputs $z' = M_\A \oplus z_\B' = f(x,  y') \oplus 1$ while the ideal world $\A$ outputs $z' = f(x, y_0)$
+            \item Such a corrupted Bob can trivially be turned into an adversary for the MAC scheme
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{One-Time MAC}%
+\begin{itemize}
+    \item The following is a $(1, 1/p)$-secure simple information theoretic MAC:
+    \begin{itemize}
+        \item $k \leftarrow \Gen()$: Sample $k = (\alpha, \beta) \leftarrow \Z_p^2$ for a prime $p$
+        \item $t \leftarrow \Tag(k,x)$: Compute a tag $t$ on a value $x$ with key $k = (\alpha, \beta)$ as $t = \alpha \cdot x + \beta$
+        \item $\{\texttt{accept}, \texttt{reject}\} \leftarrow \Ver(k, t, x)$: Output \texttt{accept} if $t' = \alpha \cdot x + \beta$ or \texttt{reject} otherwise
+    \end{itemize}
+
+\end{itemize}
+
+\subsection{The BeDOZa protocol - Passive Secure}%
+\begin{itemize}
+    \item BeDOZa is a protocol for secure two-party computation which allows the parties to securely evaluate circuits in the presence of passive adversaries and uses a trusted dealer
+    \item \textbf{Circuit Notation:} A circuit 
+    \begin{equation*}
+        C : \{0,1\}^n \times \{0,1\}^n \to \{0,1\}
+    \end{equation*}
+    is considered where
+    \begin{itemize}
+        \item $\A$ inputs the first $n$ bits and $\B$ inputs the second $n$ bits 
+        \item The circuits are composed by four different kinds of gates:
+        \begin{itemize}
+            \item Two unary gates (XOR with constant and AND with constant)
+            \item Two binary gates (XOR of two wires and AND with two wires)
+        \end{itemize}
+        \item Gates have unbound fanout i.e. the input of one gate can be fed as input to any number of gates
+        \item Cycles are not allowed
+    \end{itemize}
+    \item \textbf{Invariant:} the protocol works on secret shared bits
+    \begin{itemize}
+        \item For each wire in the circuit which carries a value $x \in \{0,1\}$ we write $[x]$ to say that the value $x$ is shared between $\A$ and $\B$
+    \end{itemize}
+    \item \textbf{Input Wires:} For each of the $n$ wires: $\A$ samples a random bit $x_\B \in_R \{0,1\}$ sets $x_\A = x \oplus x_\B$ and sends $x_\B$ to $\B$
+    \begin{itemize}
+        \item Written $[x] \leftarrow \text{Share}(A, x)$
+        \item The protocol for the input of $\B$s is symmetric to this
+    \end{itemize}
+\item \textbf{Output Wires:} If $\A$ (or $\B$) is supposed to learn the value for some wire $[x]$, $\B$ sends $x_\B$ to $\A$ which outputs $x= x_\A \oplus x_\B$
+    \begin{itemize}
+        \item Wriiten $(x, \bot) \leftarrow \text{OpenTo}(A, [x])$
+        \item If both $\A$ and $\B$ are suppposed to learn the output we write $x \leftarrow \text{Open}([x])$ 
+    \end{itemize}
+    \item \textbf{XOR with Constant:} $[z] = [x] \oplus c$ is used to denote the subprotocol unary gate which takes as input $x$, and outputs $z= x \oplus c$ for some constant bit $c \in \{0,1\}$
+    \begin{enumerate}
+        \item $\A$ defines $z_\A = x_\A \oplus c$
+        \item $\B$ defines $z_\B = x_\B$
+    \end{enumerate}
+    \item \textbf{AND with Constant:} $[z] = [x] \cdot c$ is used to denote the subprotocol unary gate which takes as input $x$, and outputs $z= x \cdot c$ for some constant bit $c \in \{0,1\}$
+    \begin{enumerate}
+        \item $\A$ defines $z_\A = c \cdot x_\A$
+        \item $\B$ defines $z_\B = c \cdot x_\B$
+    \end{enumerate}
+    \item \textbf{XOR of Two Writes} $[z] = [x] \oplus c$ is used to denote the subprotocol for gate which takes as input $x$, $y$ and outputs $z= x \oplus y$ where both $x$,$y$ are wires in the circuit and might therefore be unknown to both $\A$ and $\B$
+    \begin{enumerate}
+        \item $\A$ defines $z_\A = x_\A \oplus y_\A$
+        \item $\B$ defines $z_\B = x_\B \oplus y_\B$
+    \end{enumerate}
+\item \textbf{And of Two Wires:} $[z] \leftarrow \text{EvalAND}([x], [y])$ is used to denote the subprotocol for securely evaluating a binary AND gate which takes as input $x,y$ and output $z=x \cdot y$, where both $x,y$ are wires in the circuit and might therefore be unknown to both $\A$ and $\B$. The protocol requires the presence of a trusted dealer $D$
+    \begin{enumerate}
+        \item The dealer outputs a random triple $[u], [v], [w]$ with $w = u \cdot v$
+        \item Run subprotocol: $[d] = [x] \oplus [u]$
+        \item Run subprotocol: $[e] = [y] \oplus [v]$
+        \item Run subprotocol: $d \leftarrow \text([d])$
+        \item Run subprotocol: $e \leftarrow \text([e])$
+        \item Run subprotocol: $[z] = [w] \oplus e \cdot [x] \oplus d \cdot [y] \oplus e \cdot d$
+    \end{enumerate}
+\item \textbf{Putting things together:} The circuit is assumed to have $L$ wires denoted by $x^1, \dots, x^L$ and there is only one output wire, namely $x^L$. The complete protocol for securely evaluating a circuit $C$ works as follows:
+    \begin{itemize}
+        \item $\A$ and $\B$ run the subprotocol Share for each of the $2n$ input wires in the circuit $C$
+        \item For each layer in the circuit $i= 1 \dots d$ $\A$ and $\B$ securely evaluate all gates at that layer using the subprotocol for XOR and AND gates
+        \item Once the value associated to the output wire is ready, run the $(x,\bot) \text{OpenTo}(A, [x^L])$ subprotocol
+    \end{itemize}
+\item \textbf{Analysis:} Since we are in the passive security case it is enought to prove that the output is correct and the view of a corrupted party can be simulated
+\item Correctness follows from the inspection of the protocol, the evaluation of the unary gates and the XOR gates is trivially correct and the evaluation of the AND gates is correct since:
+    \begin{equation*}
+        w \oplus e \cdot x \oplus d \cdot y \oplus e \cdot d = uv \oplus (xy \oplus vx) \oplus (xy \oplus uy) \oplus (xy \oplus vx \oplus uy \oplus uv) = xy
+    \end{equation*}
+\item It is possible to simulate the view of a corrupted $\A$ having only access to her input/output in the following way. The simulator works as follows:
+    \begin{enumerate}
+        \item For each invocation of $[x^i] = \text{Share}(x^i,\A)$, the simulator samples random $x_\B^i$ and sets $x_\A = x^i \oplus x_\B^i$
+        \item For each invocation of $[x^i] = \text{Share}(x^i, B)$, the simulator includes in the view a message from $\B$ with a random bit $x_\A^i \in_R \{0,1\}$
+        \item When $[x^k] = [x^i] \oplus [x_j]$ is invoked, the simulator compute $x_\A^k = x_\A^i \oplus x_\A ^j$ (done for XOR with constant and AND with constant similarly)
+        \item When $[x^k] \leftarrow \text{EvalAND}([x^i], [x^j])$ s invoked the simulator
+            \begin{enumerate}
+                \item adds three random bits $u_\A, v_\A, w_\A$ to the view of $\A$s
+                \item simulates the XOR subprotocol as described above 
+                \item simulates $d \leftarrow \text{Open}([d])$ and $e \leftarrow \text{{Open}}([e])$ by sampling and adding random bits $d_\B, e_\B$ to the view of $\A$
+            \end{enumerate}
+        \item When $x^L \leftarrow \text{OpenTo}(\A, [x^L])$ is invoked, the simulator adds to $\A$'s view the value $x_B^l = x^L \oplus x_\A^L$
+            \begin{itemize}
+                \item the simulator knows $X^L$ since in the passive case the simulator is given the input and output of the functionality
+                \item the simulator knows $x_A^L$ because the invariant and the simulation of the XOR/AND gates
+            \end{itemize}
+    \end{enumerate}
+    \item The view produced by the simulator is perfectly indistinguishable from the view of a corrupted party in a protocol execution since:
+    \begin{itemize}
+        \item Share and EvalXOR are simulated exactly as in the protocol
+        \item In EvalAND $d_\B, e_\B$ are chosen at random instead of being the output of the computation of BOB since the realy values of these are obtained as
+        \begin{align*}
+            d_\B &= x_\B \oplus u_\B \\
+            e_\B &= y_\B \oplus v_\B 
+        \end{align*}
+        Since $u_\B$ and $v_\B$ are uniformly random in the protocol the distribution does not change
+        \item $x_B^L$ is distributed exactly as in the protocol since in the protocol $x_\B^L \oplus x_A^L = x^L$, and in the simulation $x^L$ is constructed as $x_\B^L = x_\A^L \oplus x^L$
+    \end{itemize}
+    \item The BeDOZa protocol has the following properties:
+    \begin{itemize}
+        \item[\checkmark] Perfect (unconditional) security
+        \item[\checkmark] Generic dealer: the dealer only needs to know an upper bound on the number of AND gates in the circuit and nothing more about the computed function
+        \item[\checkmark] (Essentially) optimal computation complexity (a small constant factor higher than computing the circuit in the clear)
+        \item[\cross] Round complexity is properational to the numbers of layers of the circuit
+        \item[\cross] Communication complexity proportional to the size of the circuit
+        \item[\cross] Storage complexity proportional to the size of the circuit
+    \end{itemize}
+\end{itemize}
+

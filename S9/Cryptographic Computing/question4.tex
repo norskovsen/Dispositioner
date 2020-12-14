@@ -1,0 +1,161 @@
+\section{Homomorphic Encryption}
+\begin{itemize}
+    \item A \textbf{fully homomorphic encryption scheme (FHE)}  is like a standard encryption scheme $(\Gen, \Enc, \Dec)$ with an extra algorithm $\Eval$
+    \begin{itemize}
+        \item $\Eval$ takes as input a vector of ciphertexts a function $f$ and outputs an encryption of the function applied to the plaintexts i.e. for $(pk, sk) \leftarrow \Gen(1^k)$ it must be the case that
+        \begin{equation*}
+            \Dec_{sk}(Eval(f, \Enc_{pk}(x_1), \dots, \Enc_{pk}(x_n))) = f(x_1, \dots, x_n)
+        \end{equation*}
+        \item A fully encryption scheme is homomorphic with respect to any function $f$ described as a circuit
+        \item A \textbf{$d$-HE scheme} allows to evaluate every function which can be expressed by a circuit with depth at most $d$ 
+        \item \textbf{Compactness:} The work performed by the decryption function should be independent of the function $f$
+        \begin{itemize}
+            \item Since otherwise one could use the decryption algorithm to compute the function after decrypting all the inputs
+        \end{itemize}
+        \item An encryption scheme $(\Gen, \Enc, \Dec, \Eval)$ has \textbf{circuit privacy} with respect to a function family $\mathcal{F}$ if for all $(pk, sk) \leftarrow \Gen(1^k)$, plaintext $x$ and function $f \in \mathcal F$, it holds that
+        \begin{equation*}
+            (sk, \Enc_{pk}(f(\overrightarrow x))) \approx_c (sk, \Eval_pk(f, \Enc_{pk}(\overrightarrow x)))
+        \end{equation*}
+    \end{itemize}
+    \item It can be used to do secure two party computation between two parties $\A$ and $B$ for a function $f$ as follows
+    \begin{enumerate}
+        \item $\A$ generates $(pk, sk) \leftarrow \Gen(1^k)$ and computes $c_1 = \Enc(pk, x_1), \dots, c_n = \Enc(pk, x_n)$ and sends $pk$ and the encrypted inputs to $\B$
+        \item $\B$ encrypts its inputs $d_1 = \Enc(pk, y_1), \dots, d_n = \Enc(pk , y_n)$
+        \item $\B$ runs $c =\Eval(f, c_1, \dots, c_n, d_1, \dots d_n)$ and sends it to $\A$
+        \item $\A$ computes $z = \Dec(sk, c)$ and outputs $z$ 
+    \end{enumerate}
+    The security of this protocol follows from the security of the FHE
+\end{itemize}
+
+\subsection{Pailler's Cryptosystem}%
+\begin{itemize}
+    \item Pailler can be seen as a variant of the RSA encryption scheme that uses modulo $N^2$ instead of $N$
+    \begin{itemize}
+        \item It allows to encrypt any message in $Z_n$
+        \item It is build using two "mappings" from $Z_N$ into $Z_{N^2}$
+        \item The first mapping $\alpha(x)$ takes care of the messages and ensures that the scheme is homomorphic:
+        \begin{equation*}
+            \alpha(x) = (1+ x N) \mod N^2
+        \end{equation*}
+        which is homomorphic since
+        \begin{align*}
+            \alpha(x) \cdot \alpha(y) \mod N^2 &= (1 + xN) (1+ yN) \mod N^2 \\
+                                &= (1 + xN + yN + xyN^2) \mod N^2 \\
+                                &= (1 + (x + y)N) \mod N^2 = \alpha(x + y \mod N)
+        \end{align*}
+        this mapping is not particular secure in fact it is invertible 
+
+        \item The second mapping $\beta(r)$ takes care of the randomness and makes sure that the scheme is secure:
+        \begin{equation*}
+            \beta(r) = r^N \mod N^2
+        \end{equation*}
+        which is homomorphic since
+        \begin{align*}
+            \beta(x) \cdot \beta(y) \mod N^2 &= x^N \cdot y^N \mod N^2 \\
+                                             &= (x \cdot y)^N \mod N^2 \\
+                                             &= \beta(x \cdot y) \mod N^2
+        \end{align*}
+        \item The security of Pailler encryption is based on the assumption that it is hard to distinguish between uniformly random elements in $Z_{N^2}$ and the output of $\beta(r)$ on an uniformly random $r$
+        \begin{itemize}
+            \item This is easy if the factorization of $N$ is known
+        \end{itemize}
+    \end{itemize}
+    \item The Pailler cryptosystem is defined as follows
+    \begin{itemize}
+        \item \textbf{Key Generation:} Sample primes $p,q$ of the same length and compute $N = p \cdot q$. Output $sk = \phi(N) = (p-1)(q-1)$ and $pk = N$
+        \item \textbf{Encryption:} On input a message $m \in Z_n$, sample a random $r \in Z_n^*$ and output
+        \begin{equation*}
+            C = \alpha(m) \cdot \beta(r) = (1 + m N) r^N \mod N^2
+        \end{equation*}
+    \item \textbf{Decryption:} Compute $m = \alpha^{-1}(C^{sk} \mod N^2) \cdot sk^{-1} \mod N$
+    \end{itemize}
+    \item The security follows from the assumption that $\beta(r)$ is indistinguishable from a random element of $Z_{N^2}$
+
+\end{itemize}
+
+\subsection{Bootstrapping}%
+\begin{itemize}
+    \item The central idea for constructing FHE is Bootstrapping:
+    \begin{itemize}
+        \item We are given a $d$-HE scheme $(gen, enc, dec, eval)$ where $eval$ can evaluate any circuit with depth at most $d$
+        \item It is assumed that the decryption function $dec$ can be described by a "shallow" circuit with depth $d' < d$ 
+        \item Using this it is possible to construct a FHE scheme that permits to evaluate circuits of any polynomial deptch
+    \end{itemize}
+    \item The \textbf{level} of the ciphertext is defined as 
+    \begin{itemize}
+        \item $0$ if it is the output of the enc function
+        \item A ciphertext obtained using $c' = eval_{pk}(f,c)$ has level $i+j$ where $i$ is the level of $c$ and $j$ is the depth of the circuit $f$
+    \end{itemize}
+    \item An FHE scheme $(\Gen, \Enc, \Dec, \Eval)$ can be constructed as follows:
+    \begin{itemize}
+        \item $\Gen$ runs $(pk, sk) \leftarrow gen(1^k)$ and defines $SK = sk$ and $PK = (pk, enc_pk(sk))$
+        \begin{itemize}
+            \item Thus we require that the scheme is secure even when the adversary is given an encryption of the secret key
+            \item It is known as a \textbf{circular secure encryption scheme} 
+        \end{itemize}
+        \item The encryption and decryption functions $\Enc, \Dec$ work exactly in the same way
+        \item The key idea to construct $\Eval$ is the technique known as refreshing:
+        \begin{itemize}
+            \item Take a ciphertext $C$ at level $i$ and assume that $i \leq d$ thus it can be correctly decrypted as $m = dec_{sk}(C)$
+            \item Let $f(x) = dec_x(C)$ be the circuit that decrypts ciphertext $C$ using the input $x$, using the encryption of $sk$ we can compute
+            \begin{equation*}
+                C' = eval(f, enc(sk))
+            \end{equation*}
+            this then gives us a ciphertext of $m$ of depth $d'$ which might be smaller than $i$ since this does not depend on the original level $i$
+            \item To encrypt e.g. the function $\neg(ab)$ where the input is two ciphertexts $C_1$ and $C_2$ one creates the following circuit:
+            \begin{equation*}
+                f(x) = \neg(dec_x(C_1) \cdot dec_x(C_2))
+            \end{equation*}
+            on the encryption of the secret key using $eval$ giving us a ciphertext with depth $d' + 1 \leq d$ and thus decryption is still correct
+            \item Any boolean circuit gate can be evaluated by repeating this process as long as necessary
+
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Example of bounded homomorphic encryption scheme}%
+\begin{itemize}
+    \item The following is an example of a simple $d$-HE scheme
+    \begin{itemize}
+        \item \textbf{Key Generation:}
+        \begin{itemize}
+            \item choose a big seret odd integer $p$
+            \item choose big random integers $q_1, \dots, q_n$ and small integers $r_1, \dots, r_n$
+            \item The secret key is $p$
+            \item The public key is $y_1, \dots, y_n)$ where $y_i = p \cdot q_i + 2r_i$
+        \end{itemize}
+        \item \textbf{Encryption:} To encrypt a bit $m$, choose at random a subset $S$ of $\{1, \dots n\}$ and compute (over the integer)
+        \begin{equation*}
+            c = m + \sum_{i \in S} y_i
+        \end{equation*}
+        \item \textbf{Decrypt:} To decrypt compute
+        \begin{equation*}
+            m = ((c \mod p) \mod 2)
+        \end{equation*}
+    \end{itemize}
+    \item Decryption works:
+    \begin{equation*}
+        c \mod p = m + 2 \left(\sum_{i \in S} r_i \right) + P \left(\sum_{i \in S} q_i \right) \mod p = m + 2 \left(\sum_{i \in S} r_i \right) \mod p
+    \end{equation*}
+    if $r_i$ are smaller enough compared to $p$, and $|S|$ is of the right side i.e. $2 \cdot \sum_{i \in S}(r_i)$ does not reduce modulo $p$ then the following must be the case
+    \begin{equation*}
+        (m + 2 \left(\sum_{i \in S} r_i \right) \mod p) \mod 2 = m
+    \end{equation*}
+    and thus decryption works
+    \item The security of the protocol is related to the assumption that it is hard to recover $p$ from the public key
+    \begin{itemize}
+        \item without the error terms $r_i$ it would be trivial to compute $p$
+        \item it is believed that adding the noise it becomes hard to compute $p$ (known as the \textbf{approximate GCD problem} )
+    \end{itemize}
+    \item The scheme is homomorphic since if $c_1 = enc(m_1, S_1)$ and $c_2 = enc(m_2, S_2)$
+    \begin{equation*}
+        c_1 + c_2 \mod p = (m_1 + m_2) + 2\left(\sum_{i \in S_1}r_1\right) + 2\left(\sum_{i \in S_2}r_i \right)
+    \end{equation*}
+    and that 
+    \begin{equation*}
+        c_1 \cdot c_2 \mod p = (m_1 \cdot m_2) + 2 \left(m_1 \cdot \sum_{i\in S_2}r_i + m_2 \cdot \sum_{i\in S_2}r_i + \sum_{i\in S_1, j\in S_2}r_ir_j \right)
+    \end{equation*}
+    every homomorphic operation make the noise grow significantly and thus they must have some bound on the depth of function they can compute
+
+
+\end{itemize}

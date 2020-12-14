@@ -1,0 +1,50 @@
+\usepackage{tikzsymbols}
+\usepackage{color, soul}
+\numberwithin{equation}{section}
+
+% Icons
+\def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;} 
+\newcommand{\cross}{$\mathbin{\tikz [x=1.4ex,y=1.4ex,line width=.2ex] \draw (0,0) -- (1,1) (0,1) -- (1,0);}$}%
+
+\newcommand{\pr}[1]{\text{Pr}}
+\newcommand{\md}{\text{ mod }}
+\renewcommand{\mod}{\text{ mod }}
+\newcommand{\cg}[1]{(\text{mod } #1)}
+
+\newcommand{\Sim}{\mathsf{Sim}}
+\newcommand{\view}{\mathsf{view}}
+
+\renewcommand{\P}{\mathsf{P}}
+\renewcommand{\S}{\mathsf{S}}
+\renewcommand{\F}{\mathsf{F}}
+\newcommand{\A}{\mathsf{A}}
+\newcommand{\B}{\mathsf{B}}
+
+% Protocols with a trusted dealer
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Tag}{\mathsf{Tag}}
+\newcommand{\Ver}{\mathsf{Ver}}
+
+% OPRF
+\newcommand{\Com}{\mathsf{Com}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\OGen}{\mathsf{OGen}}
+
+% Garbled circuits
+\newcommand{\G}{\mathcal G}
+
+\newcommand{\Gb}{\mathsf{Gb}}
+\newcommand{\En}{\mathsf{En}}
+\newcommand{\De}{\mathsf{De}}
+\newcommand{\Ev}{\mathsf{Ev}}
+\newcommand{\ev}{\mathsf{ev}}
+\newcommand{\negl}{\text{negl}}
+
+% Fully homomorphic
+\newcommand{\Eval}{\mathsf{Eval}}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "cpt-noter"
+%%% End:

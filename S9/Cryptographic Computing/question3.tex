@@ -1,0 +1,204 @@
+\section{Garbled Circuits}
+\begin{itemize}
+    \item A \textbf{garbling scheme} is a cryptographic primitive that allows to evaluated encrypted functions on encrypted inputs
+    \begin{itemize}
+        \item They allow one to perform secure computation in constant rounds
+    \end{itemize}
+    \item A \textbf{garbling scheme} is defined by a tuple $\mathcal G = (\Gb, \En, \De, \Ev, \ev)$ such that
+    \begin{itemize}
+        \item $\Gb$ is the garbled circuit generation function
+        \begin{itemize}
+            \item It is a randomized algorithm
+            \item On input a security paramter $1$ and the description of a Boolean circuit
+            \begin{equation*}
+                f: \{0,1\}^n \to \{0,1\}
+            \end{equation*}
+            where $n$ and $|f|$ are polynomial bounded in $k$, outputs a triple of strings $(F,e,d)$
+            \item The output represents the garbled circuit, the encoding information and the decoding information
+        \end{itemize}
+        \item $\ev$ allows to evaluate the normal circuit i.e. $\ev(f,x) = f(x)$
+        \item $\En$ is a deterministic encoding function that uses $e$ to map an input $x$ to garbled input $X$. 
+        \item $\De$ is the decoding function that, using the decoding information $d$, decodes the garbled output $Z'$ into a plaintext output $z$
+    \end{itemize}
+    \item \textbf{Definition (correctness).} Let $\G$ be a garbling scheme. Then $\G$ enjoys correctness if for all $f: \{0,1\}^n \to \{0,1\}$ and all $x \in \{0,1\}^n$ the following property
+    \begin{equation*}
+        \Pr(\De(d, \Ev(F, \En(e, x))) \neq f(x) : (F, e, d) \leftarrow \Gb(1^k, f))
+    \end{equation*}
+    is negligible in $k$
+    \item \textbf{Definition (Privacy)} Let $\G$ be a garbling scheme. $\G$ enjoys privacy if there exists a simulator $S$ for all $f: \{0,1\}^n \to \{0,1\}$ and all $x \in \{0, 1\}^n$, the output of the simulator on input the structure of the circuit $struct(f)$ and the output
+    \begin{equation*}
+        (F', X', d') \leftarrow S(1^k, struct(f), f(x))
+    \end{equation*}
+    is indistinguishable from:
+    \begin{equation*}
+        (F,X,d) \text{ where } (F, e, d) \leftarrow \Gb(1^k, f), X \leftarrow \En(e,x)
+    \end{equation*}
+    Thus a garbled circuit and a garbled input only leak information about the output of hte circuit evaluated on the garbled input and some partial information $struct(f)$ about the structture of the circuit computing $f$
+\end{itemize}
+
+\subsection{Yaos Protocol (A Projective scheme)}%
+\begin{itemize}
+    \item The following notation is used for the circuit $f: \{0,1\}^n \to \{0,1\}$
+    \begin{itemize}
+        \item The circuit has $T$ wires 
+        \item The wires $w_i$ with index $i \in [1, \dots, n]$ are called input wires
+        \item The wire $w_T$ is called the output wire
+        \item All other wires $w_i$ $i \in [n+1, \dots, T-1]$ are called internal wires
+        \item For a wire $w_i$:
+        \begin{itemize}
+            \item $w_{L(i)}$ denotes the left argument to the function 
+            \item $w_{R(i)}$ denotes the right argument
+        \end{itemize}
+        it is required that $L(i) \leq R(i) < i$
+    \end{itemize}
+    \item The protocol needs a psudorandom function
+    \begin{equation*}
+        G: \{0,1\}^k \times \{0,1\} \times [1 \dots T] \rightarrow \{0,1\}^{2k}
+    \end{equation*}
+    it is required that as long as at least one of the two keys is unnknown to the adversary the output of the PRF is unpredictable
+    \item \textbf{Circuit Generation:} To generate a garbled circuid $(F, e, d)$ from a boolean circuit the algorithm $\Gb$ does the following:
+    \begin{enumerate}
+        \item For each wire $i \in [1, \dots T]$ in the circuit:
+        \begin{itemize}
+            \item choose to random strings
+            \begin{equation*}
+                (K_0^i, K_1^i) \leftarrow \{0,1\}^k \times \{0,1\}^k
+            \end{equation*}
+        \item define $d = (Z_0, Z_1) = (K_0^T, K_1^T)$
+        \item define $e = \{K_0^i, K_1^i\}_{i \in [1, \dots n]}$
+        \end{itemize}
+        \item For all $i \in [n+1, T]$ define the garbled table $(C_0^i, C_1^i, C_2^i, C_3^i)$ as follows
+        \begin{enumerate}
+            \item For all $(a,b) \in \{0,1\} \times \{0,1\}$ compute
+            \begin{equation*}
+                C'_{a,b} = G(K_a^{L(i)}, K_b^{R(i)}, i) \oplus (K^i_{f_i(a,b)}, 0^k)
+            \end{equation*}
+            where the function $f_i(a,b)$ is the function for the ith gate
+            \item Choose a random permutation $\pi: \{0,1,2,3\} \rightarrow \{0,1\} \times \{0,1\}$ and add
+            \begin{equation*}
+                (C_0^i, C_1^i, C_2^i, C_3^i) = (C'_{\pi(0)}, C'_{\pi(1)}, C'_{\pi(2)}, C'_{\pi(3)})
+            \end{equation*}
+            for $F$
+        \end{enumerate}
+    \end{enumerate}
+    \item \textbf{Encoding:} The encoding function $\En(e,x)$ parses $e = \{K_0^i, K_1^i\}_{i \in [1\dots n]}$ and outputs $X= \{K_{x_i}^i\}_{i \in [1 \dots n]}$
+    \item \textbf{Evaluate:} The evaluation function $\Ev(F,X)$ parses $X= \{K^i\}_{i \in [1 \dots n]}$ and does, for all $i \in [n+1, T]$:
+    \begin{enumerate}
+        \item Recover $(C_0^i, C_1^i, C_2^i, C_3^i)$ from $F$:
+        \item For $j = 0, 1,2,3$ compute:
+        \begin{equation*}
+            (K_j', \tau_j) = G(K^{L(i)}, K^{R(i)}, i) \oplus C_j^i
+        \end{equation*}
+        \item If there is a unique $j$ s.t., $tau_j = 0^k$ define $K^i = K_j'$ else abort and output $\bot$
+    \end{enumerate}
+    Output $Z' = K^T$
+    \item \textbf{Decoding:} The decoding function $\De(d, Z)$ parses $d= (Z_0, Z_1)$ and outputs $0$ if $Z = Z_0$, $1$ if $Z = Z_1$ and $\bot$ if $Z \notin \{Z_0, Z_1\}$
+    \item Security and correctness of the protocol:
+    \begin{itemize}
+        \item \textbf{Correctness:} To allow the client to evaluate the garbled circuit without knowing what the input keys correspond to and what the output keys are the $0^k$ is used. Since if the wrong $(a,b)$ is used for a given output then with very good probability the last $k$ bits are not gonna be $0^k$ since if we try and compute it for a $\pi(j) = (a', b') \neq (a,b)$ it will be the case that
+        \begin{equation*}
+            G(K_a^{L(i)}, K_b^{R(i)}, i) \oplus C_j^i = G(K_a^{L(i)}, K_b^{R(i)}, i) \oplus G(K_{a'}^{L(i)}, K_{b'}^{R(i)}, i) \oplus (K_{f_i(a',b')}^i, 0^k)
+        \end{equation*}
+        \item \textbf{Privacy PRF} The PRF makes sure that we cannot distinguish between the four different inputs two a given Gate i.e.~if we know the keys $K_1^{L(i)}$, $K_1^{R(i)}$ for a wire $w_i$ we cannot distinguish between
+        \begin{equation*}
+            (i, K_1^{L(i)}, K_1^{R(i)}, G(K_0^{L(i)}, K_0^{R(i)}, i), G(K_1^{L(i)}, K_0^{R(i)}, i), G(K_0^{L(i)}, K_1^{R(i)}, i))
+        \end{equation*}
+        and
+        \begin{equation*}
+            (i, K_1^{L(i)}, K_1^{R(i)}, s_1, s_2, s_3)
+        \end{equation*}
+        for three random strings $s_i \in \{0,1\}^{2k}$
+        \item \textbf{Privacy $\pi$} If the circuit constructor did not permute the ciphertexts then during the evaluation $\A$ would learn $j$ such that $\tau_j = 0^k$. This would imply that $\A$ would learn that the values of the input wires to that gate are $\pi(j) = (a,b)$
+        \item \textbf{Privacy simulator} To say prove that this construction enjoys privacy we should show that there exists a simulator that on input $struct(f)$ and $z=f(x)$ can simulate $F,X,d$. The simulator can be constructed in the following way:
+        \begin{enumerate}
+            \item From $struct(f)$ we learn the number of wires $T$, the number of inputs $n$ and the wiring functions $L,R$
+            \item Choose $T+1$ random keys $K^i \in \{0,1\}^k$. Define $X = \{K^i\}_{i \in [1 \dots n]}$ define $d = (Z_0, Z_1) = (K^T, K^{T+1})$
+            \item For all $i \in [n+1, T]$, choose a random $h \in \{0,1,2,3\}$ and three random strings $C_j^i \leftarrow \{0,1\}^{2k}$ for $j \in \{0,1,2,3\}$, $j \neq h$. Define
+            \begin{equation*}
+                C_j^i = G(K^{L(i)}, K^{R(i)}, i) \oplus (K^i, 0^k)
+            \end{equation*}
+            for all $i \in [n+1, T-1]$ and define
+            \begin{equation*}
+                C_j^T = G(K^{L(T)}, K^{R(t)}, T) \oplus (K^{T+z}, 0^k)
+            \end{equation*}
+        \end{enumerate}
+        indistinguishably follows from the properties of the PRF
+    \end{itemize}
+\end{itemize}
+
+\subsection{Passive 2PC based on Garbled Circuits}
+Projective garbling schemes can be used for two-party computation in the following way:
+\begin{enumerate}
+    \setcounter{enumi}{-1}
+    \item \textbf{Setup:} $\A$ and $\B$ have inputs $x,y \in \{0,1\}^n$ and want to compute $f(x,y)$ where
+    \begin{equation*}
+        f: \{0,1\}^{2n} \to \{0,1\}
+    \end{equation*}
+    is a circuit where the first $n$ inputs are controlled by $\A$ and the last $n$ inputs are controlled by $\B$ therefore it is useful to divide the encoding information as $e = (e_x, e_y)$
+    \item \textbf{Garbled:} $\B$ runs $(F, e_x, e_y, d) \leftarrow \Gb(1^k, f)$ and sends $F$ to $\A$
+    \item \textbf{Encode $\B$s input:} $\B$ runs $Y \leftarrow \En(ey,y)$ and sends $Y$ to $\A$
+    \item \textbf{Encode $\A$s input:} $\A$ and $\B$ run a secure two party computation where $\B$ inputs $e_x$, $\A$ inputs $x$ and $\A$ learns $X \leftarrow \En(e_x, x)$
+    \begin{itemize}
+        \item This can be done using $n$ OTs: In the i-th OT Bob acts as the sender and the sender and inputs $K_0^i, K_1^i$ and $\A$ inputs $x_i$
+        \item It follows from the correctness of OT that $\A$ only learns $\{K_{x_i}^i\}_{i \in [1 \dots n]}$ and $\B$ learns nothing
+    \end{itemize}
+    \item \textbf{Evaluation:} Alice computes $Z \leftarrow \Ev(F, X, Y)$
+    \item[5a.] \textbf{$\B$ Output:} $\A$ sends $Z$ to $\B$ who outputs $z \leftarrow \De(d, Z)$
+    \item[5b.] \textbf{$\A$ Output:} $\B$ sends $d$ to $\A$ who outputs $z \leftarrow \De(d, Z)$
+\end{enumerate}
+\begin{itemize}
+    \item \textbf{The number and ordering of messages:} 
+    \begin{itemize}
+        \item 1,2,5b can sent together
+        \item If one uses a 2-message OT protocol in phase 3 then the protocol can be compressed to two messages
+        \item In the first message $\A$ sends to $\B$ the first message of the OT protocol and in the second message $\B$ sends $\A$ the second message of the OT protocol together with 1,2,5b
+    \end{itemize}
+    \item \textbf{Security of the protocol:} The protocol is secure against passive corruption here we consider the protocol where $\A$ gets output here simulating $\B$s view is trivial in the case of a corrupted $\A$ works as follows
+        \begin{itemize}
+            \item given the input and output of $\A$ $x$ and $z = f(x,y)$ the simulator garbles the circcuit $f'$ that always outputs $z$
+            \item It follows from the privacy definition of the garbling scheme $\G$
+        \end{itemize}
+\end{itemize}
+
+\subsection{Attacks and making the protocol active secure}%
+\begin{itemize}
+    \item An actively corrupt $\A$ does not have any way of attacking the protocol. This follows from the following property of garbling schemes:
+    \item \textbf{Definion (Garbled Circuit Authenticity)}. Let $\G$ be a garbling scheme. Then $\G$ enjoys authenticity if for all PPT $A$, for all $f: \{0,1\}^n \to \{0,1\}$ and all $x \in \{0,1\}^n$
+    \begin{equation*}
+        \Pr[\De(d, A(F, X)) \notin \{f(x), \bot\}] < \negl(\kappa)
+    \end{equation*}
+    where $(\F, e, d) \leftarrow \Gb(1^k, f), X \leftarrow \En(e,x)$
+    \begin{itemize}
+        \item This implies that not even an active corrupted $\A$ can cheat in Yaos protocol
+    \end{itemize}
+    \item If $\A$ sees the garbled circuit $F$ before she has to choose her input and feed it to the OT she can choose her input as a function of the garbled circuit $F$
+    \begin{itemize}
+        \item This is called \textbf{selective opening attacks} 
+        \item It can be fixed by changing the order of the messages
+    \end{itemize}
+    \item An active corrupted $\B$ can attack the protocol in several ways
+    \begin{itemize}
+        \item The most significant is changing the circuit $f$ into a circuit $f^*$ with the same structure
+        \item The garbled circuit $F^*$ could be be a function that outputs a value chosen by $\B$ or that leaks information about $\A$s input
+    \end{itemize}
+    \item Solution to a corrupt $\B$ is to use a cut-and-choose there $\B$ garble the function $f$, $s$ times and send $F_1, \dots, F_s$ to $\A$
+    \begin{itemize}
+        \item \textbf{"All-but-one" cut and choose:} $\A$ chooses one index $j \in_R [1,s]$
+        \begin{enumerate}
+            \item $\B$ sends the randomness that he used to garble all circuits $F_i$ with $i \neq j$
+            \item If not bad function is found the protocol continuous as in the passive case
+        \end{enumerate}
+        A malicious $\B$ has the probability $1/s$ to cheat, which only gives $1-1/s$ which is not negligible (called \textbf{covert security})
+        \item \textbf{"Majority" cut-and-choose:} $\A$ chooses a subset $J \subset [1, s]$ of size $|J| \approx s/2$ circuits to be checked
+        \begin{itemize}
+            \item The output is found taking the majority of evaluating the remaining $s/2$ circuits
+            \item The majority of the unopened circuit computed are honestly generating if $\A$ did not detect any cheating during the cut-and-chose phase
+            \item The majority is taking since otherwise $\B$ could mount a select and failure attack where he could learn a single bit by garbling two functions $f_1,f_2$ s.t. they output the same value if the first bit of $x$ is $0$ or different values otherwise
+            \item One should also be sure that the input given to the different circuits are the same since otherwise $\A$ or $\B$ could learn more information
+        \end{itemize}
+    \end{itemize}
+    \item Other kind of \textbf{selective failure attack} that a corrupt $\B$ can perform is using the "wrong input during the OT phase"
+    \begin{itemize}
+        \item If for some position $i$ $\B$ inputs the pair $(m_0, m_1) = (K_0^i, R)$ for some random string $R$ therefore if for position $i$ $\A$s input is $0$ it will complete successfully otherwise the $\Ev$ procedure will fail, thus $\A$ will abort.
+    \end{itemize}
+\end{itemize}
