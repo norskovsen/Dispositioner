@@ -56,3 +56,4 @@ Der er dispositioner for følgende kurser taget på Aarhus Universitet i det på
   - Program Analysis and Verification (2019)
   - Cryptologic Protocol Theory (2020)
   - Randomized algorithms (2020)
+  - Cryptographic Computing (2020)
